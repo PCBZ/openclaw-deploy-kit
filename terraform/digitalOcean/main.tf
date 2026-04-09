@@ -28,14 +28,14 @@ resource "digitalocean_firewall" "openclaw" {
   inbound_rule {
     protocol         = "tcp"
     port_range       = "22"
-    source_addresses = ["0.0.0.0/0", "::/0"]
+    source_addresses = var.ssh_allowed_cidrs
   }
 
   # OpenClaw gateway
   inbound_rule {
     protocol         = "tcp"
     port_range       = "18789"
-    source_addresses = ["0.0.0.0/0", "::/0"]
+    source_addresses = var.gateway_allowed_cidrs
   }
 
 
