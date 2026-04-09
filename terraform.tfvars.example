@@ -1,0 +1,20 @@
+# Copy to terraform.tfvars and fill in your values
+# cp terraform.tfvars.example terraform.tfvars
+
+# ── OCI Auth ────────────────────────────────────────────────
+# From Oracle Cloud Console → Profile → API Keys
+tenancy_ocid     = "ocid1.tenancy.oc1..your-tenancy-ocid"
+user_ocid        = "ocid1.user.oc1..your-user-ocid"
+fingerprint      = "xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx"
+private_key_path = "~/.oci/oci_api_key.pem"
+region           = "us-ashburn-1"
+
+# ── OCI Resource ────────────────────────────────────────────
+# From Oracle Cloud Console → Compartment OCID
+compartment_id      = "ocid1.compartment.oc1..your-compartment-ocid"
+availability_domain = "Uocm:US-ASHBURN-AD-1"
+
+# ── Secrets ──────────────────────────────────────────────────
+openrouter_api_key     = "sk-or-v1-your-key-here"
+telegram_bot_token     = "1234567890:your-token-here"
+openclaw_gateway_token = "your-secret-gateway-token"
