@@ -8,25 +8,58 @@
   "agents": {
     "defaults": {
       "model": {
-        "primary": "openrouter/free",
+        "primary": "openrouter/meta-llama/llama-3.3-70b-instruct:free",
         "fallbacks": [
-          "openrouter/cognitivecomputations/dolphin-mistral-24b-venice-edition:free",
-          "openrouter/google/gemini-2.0-flash:free",
-          "openrouter/meta-llama/llama-3.3-70b-instruct:free",
-          "openrouter/deepseek/deepseek-r1:free",
-          "openrouter/qwen/qwen-2.5-72b-instruct:free",
-          "openrouter/mistralai/devstral-small:free",
-          "openrouter/nvidia/llama-3.1-nemotron-70b-instruct:free",
-          "openrouter/google/gemma-3-27b-it:free",
-          "openrouter/allenai/olmo-3.1-32b-think:free"
+          "openrouter/auto"
         ]
+      },
+      "models": {
+        "openrouter/meta-llama/llama-3.3-70b-instruct:free": {"alias": "llama"},
+        "openrouter/cognitivecomputations/dolphin-mistral-24b-venice-edition:free": {"alias": "uncensored"},
+        "openrouter/google/gemini-2.0-flash-exp:free": {"alias": "gemini"},
+        "openrouter/auto": {"alias": "auto"}
+      },
+      "compaction": {
+        "mode": "safeguard",
+        "reserveTokensFloor": 20000
+      }
+    }
+  },
+  "tools": {
+    "web": {
+      "search": {
+        "enabled": true,
+        "provider": "brave"
+      },
+      "fetch": {
+        "enabled": false
+      }
+    },
+    "deny": ["browser"]
+  },
+  "plugins": {
+    "entries": {
+      "openrouter": { "enabled": true },
+      "brave": {
+        "enabled": true,
+        "config": {
+          "webSearch": {
+            "apiKey": "${BRAVE_API_KEY}"
+          }
+        }
       }
     }
   },
   "channels": {
     "telegram": {
       "enabled": true,
-      "token": "${TELEGRAM_BOT_TOKEN}"
+      "accounts": {
+        "default": {
+          "botToken": "${TELEGRAM_BOT_TOKEN}",
+          "dmPolicy": "open",
+          "groupPolicy": "open"
+        }
+      }
     }
   }
 }

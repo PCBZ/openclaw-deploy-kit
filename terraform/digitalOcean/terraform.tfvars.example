@@ -1,0 +1,23 @@
+# Copy to terraform.tfvars and fill in your values
+# cp terraform.tfvars.example terraform.tfvars
+
+# ── DigitalOcean Auth ────────────────────────────────────────
+# From https://cloud.digitalocean.com/account/api/tokens
+do_token = "your-digitalocean-api-token"
+
+# ── SSH ──────────────────────────────────────────────────────
+ssh_public_key_path = "~/.ssh/id_rsa.pub"
+
+# ── Droplet ──────────────────────────────────────────────────
+region       = "sfo3"
+droplet_size = "s-1vcpu-1gb"
+
+# ── Secrets ──────────────────────────────────────────────────
+openrouter_api_key     = "sk-or-v1-your-key-here"
+telegram_bot_token     = "1234567890:your-token-here"
+openclaw_gateway_token = "your-secret-gateway-token"
+
+# ── Web Search ───────────────────────────────────────────────
+# Brave Search API key (https://api.search.brave.com/) — free tier: 1000 req/month
+# Leave empty ("") to fall back to DuckDuckGo (no key needed)
+brave_api_key = "BSA-your-brave-api-key-here"
