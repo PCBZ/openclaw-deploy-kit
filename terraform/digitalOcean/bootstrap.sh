@@ -58,7 +58,11 @@ cat > /root/.openclaw/openclaw.json << JSONEOF
       "models": {
         "openrouter/meta-llama/llama-3.3-70b-instruct:free": {"alias": "llama"},
         "openrouter/cognitivecomputations/dolphin-mistral-24b-venice-edition:free": {"alias": "uncensored"},
-        "openrouter/google/gemini-2.0-flash-exp:free": {"alias": "gemini"},
+        "openrouter/google/gemma-4-31b-it:free": {"alias": "gemma"},
+        "openrouter/nousresearch/hermes-3-llama-3.1-405b:free": {"alias": "hermes"},
+        "openrouter/nvidia/nemotron-3-super-120b-a12b:free": {"alias": "nemotron"},
+        "openrouter/openai/gpt-oss-120b:free": {"alias": "gpt"},
+        "openrouter/qwen/qwen3-coder:free": {"alias": "coder"},
         "openrouter/auto": {"alias": "auto"}
       },
       "compaction": {
