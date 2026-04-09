@@ -20,6 +20,16 @@ variable "droplet_size" {
   default     = "s-1vcpu-1gb"
 }
 
+variable "ssh_allowed_cidrs" {
+  description = "CIDR blocks allowed to SSH to the droplet (recommended: your current public IP as /32)."
+  type        = list(string)
+}
+
+variable "gateway_allowed_cidrs" {
+  description = "CIDR blocks allowed to access OpenClaw gateway on port 18789."
+  type        = list(string)
+}
+
 variable "swap_size" {
   description = "Swap file size (e.g. 2G, 3G, 4G) — prevents OOM during npm install"
   default     = "3G"
