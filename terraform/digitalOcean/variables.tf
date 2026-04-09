@@ -23,11 +23,13 @@ variable "droplet_size" {
 variable "ssh_allowed_cidrs" {
   description = "CIDR blocks allowed to SSH to the droplet (recommended: your current public IP as /32)."
   type        = list(string)
+  default     = ["0.0.0.0/0", "::/0"]
 }
 
 variable "gateway_allowed_cidrs" {
   description = "CIDR blocks allowed to access OpenClaw gateway on port 18789."
   type        = list(string)
+  default     = ["0.0.0.0/0", "::/0"]
 }
 
 variable "swap_size" {

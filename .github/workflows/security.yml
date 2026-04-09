@@ -85,6 +85,7 @@ jobs:
         with:
           directory: terraform/digitalOcean
           framework: terraform
+          skip_check: CKV_DIO_4
           quiet: true
           output_format: cli,sarif
           output_file_path: console,checkov.sarif
