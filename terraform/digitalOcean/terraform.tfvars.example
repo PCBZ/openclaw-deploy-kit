@@ -9,8 +9,14 @@ do_token = "your-digitalocean-api-token"
 ssh_public_key_path = "~/.ssh/id_rsa.pub"
 
 # ── Droplet ──────────────────────────────────────────────────
-region       = "sfo3"
+# Regions: tor1 (Toronto), sfo3 (San Francisco), nyc3 (New York), sgp1 (Singapore), ams3 (Amsterdam)
+region       = "tor1"
+
+# Sizes: s-1vcpu-1gb ($6/mo), s-1vcpu-2gb ($12/mo), s-2vcpu-2gb ($18/mo), s-2vcpu-4gb ($24/mo)
 droplet_size = "s-1vcpu-1gb"
+
+# Swap: 2G (min for 1GB RAM), 3G (recommended), 4G (comfortable)
+swap_size    = "3G"
 
 # ── Secrets ──────────────────────────────────────────────────
 openrouter_api_key     = "sk-or-v1-your-key-here"
