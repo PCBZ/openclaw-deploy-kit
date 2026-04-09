@@ -15,6 +15,11 @@ region       = "tor1"
 # Sizes: s-1vcpu-1gb ($6/mo), s-1vcpu-2gb ($12/mo), s-2vcpu-2gb ($18/mo), s-2vcpu-4gb ($24/mo)
 droplet_size = "s-1vcpu-1gb"
 
+# Restrict ingress to trusted CIDRs.
+# Replace with your own public IP/CIDR ranges.
+ssh_allowed_cidrs     = ["203.0.113.10/32"]
+gateway_allowed_cidrs = ["203.0.113.10/32"]
+
 # Swap: 2G (min for 1GB RAM), 3G (recommended), 4G (comfortable)
 swap_size    = "3G"
 
