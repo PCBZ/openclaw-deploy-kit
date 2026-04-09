@@ -28,15 +28,24 @@ jobs:
       - name: Run ShellCheck on bash scripts and .envrc
         run: |
           set -euo pipefail
-          mapfile -d '' files < <(find . -type f \( -name "*.sh" -o -name "*.bash" -o -name ".envrc" \) -not -path "./.git/*" -print0)
-          if [ "${#files[@]}" -eq 0 ]; then
-            echo "No shell files or .envrc found."
-            exit 0
+          mapfile -d '' shell_files < <(find . -type f \( -name "*.sh" -o -name "*.bash" \) -not -path "./.git/*" -print0)
+          mapfile -d '' envrc_files < <(find . -type f -name ".envrc" -not -path "./.git/*" -print0)
+
+          if [ "${#shell_files[@]}" -gt 0 ]; then
+            printf 'Checking shell files:\n'
+            printf ' - %s\n' "${shell_files[@]}"
+            shellcheck -x -S error "${shell_files[@]}"
           fi
 
-          printf 'Checking files:\n'
-          printf ' - %s\n' "${files[@]}"
-          shellcheck -x "${files[@]}"
+          if [ "${#envrc_files[@]}" -gt 0 ]; then
+            printf 'Checking .envrc files (bash mode):\n'
+            printf ' - %s\n' "${envrc_files[@]}"
+            shellcheck -s bash -S error "${envrc_files[@]}"
+          fi
+
+          if [ "${#shell_files[@]}" -eq 0 ] && [ "${#envrc_files[@]}" -eq 0 ]; then
+            echo "No shell files or .envrc found."
+          fi
 
   envrc-policy:
     name: .envrc Policy Checks
@@ -82,7 +91,7 @@ jobs:
 
       - name: Upload Checkov SARIF
         if: always()
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: checkov.sarif
 
