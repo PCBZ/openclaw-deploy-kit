@@ -1,0 +1,102 @@
+name: Security Checks
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  schedule:
+    - cron: "0 4 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  shell-security:
+    name: Shell Security (ShellCheck)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install ShellCheck
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y shellcheck
+
+      - name: Run ShellCheck on bash scripts and .envrc
+        run: |
+          set -euo pipefail
+          mapfile -d '' files < <(find . -type f \( -name "*.sh" -o -name "*.bash" -o -name ".envrc" \) -not -path "./.git/*" -print0)
+          if [ "${#files[@]}" -eq 0 ]; then
+            echo "No shell files or .envrc found."
+            exit 0
+          fi
+
+          printf 'Checking files:\n'
+          printf ' - %s\n' "${files[@]}"
+          shellcheck -x "${files[@]}"
+
+  envrc-policy:
+    name: .envrc Policy Checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate .envrc policy
+        run: |
+          set -euo pipefail
+          if [ ! -f .envrc ]; then
+            echo "No .envrc found."
+            exit 0
+          fi
+
+          # Basic parser sanity check.
+          bash -n .envrc
+
+          # Block common risky patterns in direnv files.
+          if grep -En '(^|[^[:alnum:]_])(curl|wget)[^\n]*\|[[:space:]]*(bash|sh)\b|\beval[[:space:]]+|\bsource_url\b' .envrc; then
+            echo "Found unsafe pattern(s) in .envrc."
+            exit 1
+          fi
+
+          echo ".envrc policy check passed."
+
+  terraform-security:
+    name: Terraform Security (Checkov)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run Checkov on Terraform
+        uses: bridgecrewio/checkov-action@v12
+        with:
+          directory: terraform/digitalOcean
+          framework: terraform
+          quiet: true
+          output_format: cli,sarif
+          output_file_path: console,checkov.sarif
+
+      - name: Upload Checkov SARIF
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: checkov.sarif
+
+  secrets-scan:
+    name: Secret Scan (Gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
