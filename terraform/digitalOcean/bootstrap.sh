@@ -10,7 +10,7 @@ export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 apt-get update -y
 
 # ── 2. Add swap to prevent OOM during npm install ────────────
-fallocate -l 3G /swapfile
+fallocate -l ${swap_size} /swapfile
 chmod 600 /swapfile
 mkswap /swapfile
 swapon /swapfile
@@ -105,7 +105,7 @@ cat > /root/.openclaw/openclaw.json << JSONEOF
         "default": {
           "botToken": "${telegram_bot_token}",
           "dmPolicy": "open",
-          "groupPolicy": "open"
+          "groupPolicy": "open"${telegram_owner_id != "" ? ",\n          \"allowFrom\": [\"${telegram_owner_id}\"]" : ""}
         }
       }
     }
@@ -137,19 +137,86 @@ openclaw plugins install @openclaw/telegram
 # ── 10. Auto-fix common config issues ────────────────────────
 openclaw doctor --fix || true
 
-# ── 11. Non-interactive onboard + install systemd daemon ─────
-openclaw onboard --non-interactive --install-daemon
+# ── 11. Enable systemd user services for root (required in cloud-init) ──
+# cloud-init has no active login session; linger + XDG_RUNTIME_DIR are needed
+# for systemctl --user to work.
+loginctl enable-linger root
+export XDG_RUNTIME_DIR=/run/user/0
+mkdir -p "$XDG_RUNTIME_DIR"
+systemctl start user@0.service || true
 
-# ── 12. Restore config (onboard may have modified it) ────────
+# ── 12. Non-interactive onboard + install systemd daemon ─────
+openclaw onboard --non-interactive --accept-risk --install-daemon
+
+# ── 13. Restore config (onboard may have modified it) ────────
 write_config
 
-# ── 13. Sync gateway token to systemd unit ───────────────────
+# ── 14. Sync gateway token to systemd unit ───────────────────
 # This bakes the correct OPENCLAW_GATEWAY_TOKEN into the service file,
 # preventing the "gateway token mismatch" loop on restart.
 openclaw gateway install --force
 
-# ── 14. Reload systemd and start gateway ─────────────────────
+# ── 15. Reload systemd and start gateway ─────────────────────
 systemctl --user daemon-reload
 systemctl --user restart openclaw-gateway.service
+
+# ── 16. Auto-approve Telegram Native Approvals scope ─────────
+# After the gateway starts, the Telegram plugin requests an upgrade from
+# operator.read → operator.approvals. Without approval, privileged commands
+# like /model return "You are not authorized". We wait for the pending
+# request to appear in devices/pending.json, approve it, then restart.
+echo "Waiting for Telegram Native Approvals pairing request..."
+sleep 35
+
+python3 << 'PYEOF'
+import json, sys, time
+
+PENDING_FILE = "/root/.openclaw/devices/pending.json"
+PAIRED_FILE  = "/root/.openclaw/devices/paired.json"
+
+# Wait up to 60s for a pending request
+pending = {}
+for _ in range(12):
+    try:
+        with open(PENDING_FILE) as f:
+            pending = json.load(f)
+        if pending:
+            break
+    except Exception:
+        pass
+    time.sleep(5)
+
+if not pending:
+    print("No pending pairing requests found — skipping approval step")
+    sys.exit(0)
+
+request   = list(pending.values())[0]
+device_id = request.get("deviceId")
+print(f"Approving operator.approvals for device: {device_id}")
+
+with open(PAIRED_FILE) as f:
+    paired = json.load(f)
+
+if device_id not in paired:
+    print(f"Device {device_id} not in paired.json — skipping")
+    sys.exit(0)
+
+device = paired[device_id]
+for key in ("scopes", "approvedScopes"):
+    if "operator.approvals" not in device.get(key, []):
+        device.setdefault(key, []).append("operator.approvals")
+
+with open(PAIRED_FILE, "w") as f:
+    json.dump(paired, f, indent=2)
+print(f"paired.json updated — scopes: {device['scopes']}")
+
+with open(PENDING_FILE, "w") as f:
+    json.dump({}, f)
+print("pending.json cleared")
+PYEOF
+
+# Restart so gateway picks up the newly approved scope
+systemctl --user restart openclaw-gateway.service
+echo "Gateway restarted with operator.approvals approved."
 
 echo "OpenClaw setup complete!"

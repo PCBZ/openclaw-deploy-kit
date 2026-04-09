@@ -61,11 +61,13 @@ resource "digitalocean_droplet" "openclaw" {
   image    = "ubuntu-24-04-x64"
   ssh_keys = [digitalocean_ssh_key.openclaw.fingerprint]
 
-  user_data = templatefile("${path.module}/user_data.sh", {
+  user_data = templatefile("${path.module}/bootstrap.sh", {
     openrouter_api_key     = var.openrouter_api_key
     telegram_bot_token     = var.telegram_bot_token
     openclaw_gateway_token = var.openclaw_gateway_token
     brave_api_key          = var.brave_api_key
+    swap_size              = var.swap_size
+    telegram_owner_id      = var.telegram_owner_id
   })
 }
 
