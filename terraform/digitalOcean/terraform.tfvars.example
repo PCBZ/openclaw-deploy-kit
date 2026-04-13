@@ -8,6 +8,9 @@ do_token = "your-digitalocean-api-token"
 # ── SSH ──────────────────────────────────────────────────────
 ssh_public_key_path = "~/.ssh/id_rsa.pub"
 
+# Optional: reuse an existing SSH key in your DO account to avoid duplicate-key errors.
+# existing_ssh_key_fingerprint = "3b:16:bf:e5:8f:89:02:8c:67:63:6a:73:b4:7d:85:4d"
+
 # ── Droplet ──────────────────────────────────────────────────
 # Regions: tor1 (Toronto), sfo3 (San Francisco), nyc3 (New York), sgp1 (Singapore), ams3 (Amsterdam)
 region       = "tor1"
@@ -26,6 +29,8 @@ swap_size    = "3G"
 # ── Secrets ──────────────────────────────────────────────────
 openrouter_api_key     = "sk-or-v1-your-key-here"
 telegram_bot_token     = "1234567890:your-token-here"
+line_channel_access_token = ""
+line_channel_secret    = ""
 openclaw_gateway_token = "your-secret-gateway-token"
 
 # ── Web Search ───────────────────────────────────────────────

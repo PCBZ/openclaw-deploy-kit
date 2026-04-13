@@ -8,12 +8,14 @@
 [![OpenRouter](https://img.shields.io/badge/OpenRouter-Free%20Tier-ff6b35?logoColor=white)](https://openrouter.ai)
 [![OpenClaw](https://img.shields.io/badge/OpenClaw-2026-00e5cc?logoColor=white)](https://openclaw.bot)
 [![Telegram](https://img.shields.io/badge/Telegram-Bot-26a5e4?logo=telegram&logoColor=white)](https://telegram.org)
+[![LINE](https://img.shields.io/badge/LINE-Bot-00c300?logo=line&logoColor=white)](https://line.me)
 
-One-command deployment of an [OpenClaw](https://openclaw.bot) AI agent as a Telegram bot on DigitalOcean. After `terraform apply`, the bot is fully operational with no manual SSH steps required.
+One-command deployment of an [OpenClaw](https://openclaw.bot) AI agent on DigitalOcean with Telegram support and optional LINE support. After `terraform apply`, the bot is fully operational with no manual SSH steps required.
 
 ## Features
 
 - Telegram bot with DM and group chat support
+- Optional LINE Messaging API channel
 - Web search via Brave Search (falls back to DuckDuckGo)
 - 8 switchable free LLM models via `/model <alias>`
 - Secrets managed via `.env` — never committed
@@ -26,6 +28,7 @@ One-command deployment of an [OpenClaw](https://openclaw.bot) AI agent as a Tele
 - DigitalOcean account + API token
 - OpenRouter API key
 - Telegram bot token (from [@BotFather](https://t.me/BotFather))
+- LINE channel access token + channel secret (optional)
 
 ## Setup
 
@@ -41,6 +44,8 @@ Edit `.env` and fill in your values:
 |---|---|
 | `OPENROUTER_API_KEY` | From [openrouter.ai/keys](https://openrouter.ai/keys) |
 | `TELEGRAM_BOT_TOKEN` | From [@BotFather](https://t.me/BotFather) |
+| `LINE_CHANNEL_ACCESS_TOKEN` | From LINE Developers Console (optional, enables LINE channel) |
+| `LINE_CHANNEL_SECRET` | From LINE Developers Console (optional, enables LINE channel) |
 | `OPENCLAW_GATEWAY_TOKEN` | Any strong random string |
 | `BRAVE_API_KEY` | From [api.search.brave.com](https://api.search.brave.com) — optional, falls back to DuckDuckGo |
 | `TELEGRAM_OWNER_ID` | Your Telegram user ID from [@userinfobot](https://t.me/userinfobot) — grants `/model` and other privileged commands |

@@ -9,6 +9,11 @@ variable "ssh_public_key_path" {
   default     = "~/.ssh/id_rsa.pub"
 }
 
+variable "existing_ssh_key_fingerprint" {
+  description = "Existing DigitalOcean SSH key fingerprint to reuse. Leave empty to create a new SSH key from ssh_public_key_path."
+  default     = ""
+}
+
 # ── Droplet ──────────────────────────────────────────────────
 variable "region" {
   description = "DigitalOcean region slug (e.g. tor1, sfo3, nyc3, sgp1, ams3)"
@@ -44,6 +49,18 @@ variable "openrouter_api_key" {
 
 variable "telegram_bot_token" {
   sensitive = true
+}
+
+variable "line_channel_access_token" {
+  description = "LINE Messaging API channel access token. Leave empty to disable LINE channel."
+  sensitive   = true
+  default     = ""
+}
+
+variable "line_channel_secret" {
+  description = "LINE Messaging API channel secret. Leave empty to disable LINE channel."
+  sensitive   = true
+  default     = ""
 }
 
 variable "openclaw_gateway_token" {
