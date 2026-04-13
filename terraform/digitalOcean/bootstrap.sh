@@ -86,11 +86,12 @@ cat > /root/.openclaw/openclaw.json << JSONEOF
   "plugins": {
     "load": {
       "paths": [
-        "/usr/lib/node_modules/openclaw/dist/extensions/telegram"
+        "/usr/lib/node_modules/openclaw/dist/extensions/telegram"${line_channel_access_token != "" && line_channel_secret != "" ? ",\n        \"/usr/lib/node_modules/openclaw/dist/extensions/line\"" : ""}
       ]
     },
     "entries": {
       "telegram": { "enabled": true },
+      ${line_channel_access_token != "" && line_channel_secret != "" ? "\"line\": { \"enabled\": true }," : ""}
       "openrouter": { "enabled": true },
       "brave": {
         "enabled": true,
@@ -112,7 +113,7 @@ cat > /root/.openclaw/openclaw.json << JSONEOF
           "groupPolicy": "open"${telegram_owner_id != "" ? ",\n          \"allowFrom\": [\"${telegram_owner_id}\"]" : ""}
         }
       }
-    }
+    }${line_channel_access_token != "" && line_channel_secret != "" ? ",\n    \"line\": {\n      \"enabled\": true,\n      \"accounts\": {\n        \"default\": {\n          \"channelAccessToken\": \"${line_channel_access_token}\",\n          \"channelSecret\": \"${line_channel_secret}\"\n        }\n      }\n    }" : ""}
   }
 }
 JSONEOF
@@ -124,6 +125,8 @@ write_config
 cat > /root/.openclaw/.env << ENVEOF
 OPENROUTER_API_KEY=${openrouter_api_key}
 TELEGRAM_BOT_TOKEN=${telegram_bot_token}
+LINE_CHANNEL_ACCESS_TOKEN=${line_channel_access_token}
+LINE_CHANNEL_SECRET=${line_channel_secret}
 OPENCLAW_GATEWAY_TOKEN=${openclaw_gateway_token}
 BRAVE_API_KEY=${brave_api_key}
 OPENCLAW_ONBOARD_NON_INTERACTIVE=1
@@ -132,11 +135,18 @@ ENVEOF
 # ── 8. Export env vars for subsequent commands ───────────────
 export OPENROUTER_API_KEY=${openrouter_api_key}
 export TELEGRAM_BOT_TOKEN=${telegram_bot_token}
+export LINE_CHANNEL_ACCESS_TOKEN=${line_channel_access_token}
+export LINE_CHANNEL_SECRET=${line_channel_secret}
 export OPENCLAW_GATEWAY_TOKEN=${openclaw_gateway_token}
 export BRAVE_API_KEY=${brave_api_key}
 
 # ── 9. Install Telegram plugin ───────────────────────────────
 openclaw plugins install @openclaw/telegram
+
+# Install LINE plugin when LINE credentials are configured.
+if [ -n "${line_channel_access_token}" ] && [ -n "${line_channel_secret}" ]; then
+  openclaw plugins install @openclaw/line || echo "LINE plugin install skipped (package unavailable in this release)."
+fi
 
 # ── 10. Auto-fix common config issues ────────────────────────
 openclaw doctor --fix || true
