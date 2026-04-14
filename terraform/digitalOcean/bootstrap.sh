@@ -1,6 +1,16 @@
 #!/bin/bash
 set -e
 
+# ── Validate required secrets ────────────────────────────────
+if [[ -z "${telegram_bot_token}" || "${telegram_bot_token}" == "" ]]; then
+  echo "ERROR: telegram_bot_token is empty. Ensure 'direnv allow' is run before 'terraform apply'"
+  exit 1
+fi
+if [[ -z "${openclaw_gateway_token}" || "${openclaw_gateway_token}" == "" ]]; then
+  echo "ERROR: openclaw_gateway_token is empty. Ensure 'direnv allow' is run before 'terraform apply'"
+  exit 1
+fi
+
 # ── Set required environment variables for cloud-init context ─
 export HOME=/root
 export USER=root
@@ -50,20 +60,29 @@ cat > /root/.openclaw/openclaw.json << JSONEOF
   "agents": {
     "defaults": {
       "model": {
-        "primary": "openrouter/meta-llama/llama-3.3-70b-instruct:free",
+        "primary": "openrouter/deepseek/deepseek-v3.2",
         "fallbacks": [
+          "openrouter/meta-llama/llama-3.3-70b-instruct:free",
           "openrouter/auto"
         ]
       },
       "models": {
-        "openrouter/meta-llama/llama-3.3-70b-instruct:free": {"alias": "llama"},
-        "openrouter/cognitivecomputations/dolphin-mistral-24b-venice-edition:free": {"alias": "uncensored"},
-        "openrouter/google/gemma-4-31b-it:free": {"alias": "gemma"},
-        "openrouter/nousresearch/hermes-3-llama-3.1-405b:free": {"alias": "hermes"},
-        "openrouter/nvidia/nemotron-3-super-120b-a12b:free": {"alias": "nemotron"},
-        "openrouter/openai/gpt-oss-120b:free": {"alias": "gpt"},
-        "openrouter/qwen/qwen3-coder:free": {"alias": "coder"},
-        "openrouter/auto": {"alias": "auto"}
+        "anthropic/claude-opus-4-6":                              {"alias": "opus"},
+        "anthropic/claude-sonnet-4-6":                           {"alias": "sonnet"},
+        "anthropic/claude-haiku-4-5-20251001":                   {"alias": "haiku"},
+        "openai/gpt-5.4":                                        {"alias": "gpt5"},
+        "openai/gpt-4o":                                         {"alias": "gpt4o"},
+        "openai/gpt-4o-mini":                                    {"alias": "mini"},
+        "google/gemini-2.5-pro":                                 {"alias": "gemini-pro"},
+        "google/gemini-2.5-flash":                               {"alias": "flash"},
+        "deepseek/deepseek-v3.2":                                {"alias": "deepseek"},
+        "deepseek/deepseek-r1":                                  {"alias": "r1"},
+        "mistralai/devstral-small":                              {"alias": "devstral"},
+        "meta-llama/llama-3.3-70b-instruct:free":                {"alias": "llama"},
+        "nvidia/nemotron-3-super-120b-a12b:free":                {"alias": "nemotron"},
+        "qwen/qwen3-coder:free":                                 {"alias": "coder"},
+        "cognitivecomputations/dolphin-mistral-24b-venice-edition:free": {"alias": "uncensored"},
+        "openrouter/auto":                                       {"alias": "auto"}
       },
       "compaction": {
         "mode": "safeguard",
@@ -155,6 +174,10 @@ openclaw onboard --non-interactive --accept-risk --install-daemon
 # ── 13. Restore config (onboard may have modified it) ────────
 write_config
 
+# ── 13.5. Clear agent cache to ensure fresh model list ───────
+# This ensures Telegram plugin loads all available models (not just free ones)
+rm -rf /root/.openclaw/agents
+
 # ── 14. Sync gateway token to systemd unit ───────────────────
 # This bakes the correct OPENCLAW_GATEWAY_TOKEN into the service file,
 # preventing the "gateway token mismatch" loop on restart.
@@ -166,7 +189,7 @@ systemctl --user restart openclaw-gateway.service
 
 # ── 16. Auto-approve Telegram Native Approvals scope ─────────
 # After the gateway starts, the Telegram plugin requests an upgrade from
-# operator.read → operator.approvals. Without approval, privileged commands
+# operator.read -> operator.approvals. Without approval, privileged commands
 # like /model return "You are not authorized". We wait for the pending
 # request to appear in devices/pending.json, approve it, then restart.
 echo "Waiting for Telegram Native Approvals pairing request..."
