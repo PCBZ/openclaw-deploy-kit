@@ -105,15 +105,11 @@ cat > /root/.openclaw/openclaw.json << JSONEOF
     }%{if slack_app_token != "" && slack_bot_token != ""},
     "slack": {
       "enabled": true,
-      "accounts": {
-        "default": {
-          "appToken": "${slack_app_token}",
-          "botToken": "${slack_bot_token}",
-          "mode": "socket",
-          "dmPolicy": "open",
-          "groupPolicy": "open"
-        }
-      }
+      "mode": "socket",
+      "appToken": "${slack_app_token}",
+      "botToken": "${slack_bot_token}",
+      "dmPolicy": "open",
+      "groupPolicy": "open"
     }%{endif}
   }
 }
@@ -165,26 +161,24 @@ openclaw onboard --non-interactive --accept-risk --install-daemon || true
 # Restore config (onboard may have modified it)
 write_config
 
+# ── Fix models.json baseUrl (onboard writes wrong /v1 instead of /api/v1) ──
+# openclaw onboard generates models.json with baseUrl https://openrouter.ai/v1
+# which is the web UI, not the API. The correct endpoint is /api/v1.
+MODELS_JSON=/root/.openclaw/agents/main/agent/models.json
+if [ -f "$MODELS_JSON" ]; then
+  sed -i 's|https://openrouter.ai/v1|https://openrouter.ai/api/v1|g' "$MODELS_JSON"
+  echo "Fixed models.json baseUrl: /v1 -> /api/v1"
+fi
+
 # ── Write agent auth-profiles (OpenRouter key) ───────────────
 # The agent reads auth from auth-profiles.json, NOT from .env
 mkdir -p /root/.openclaw/agents/main/agent
-python3 << AUTHEOF
-import json
-env = {}
-with open("/root/.openclaw/.env") as f:
-    for line in f:
-        line = line.strip()
-        if line and not line.startswith("#") and "=" in line:
-            k, v = line.split("=", 1)
-            env[k.strip()] = v.strip()
-key = env.get("OPENROUTER_API_KEY", "")
-if key:
-    path = "/root/.openclaw/agents/main/agent/auth-profiles.json"
-    with open(path, "w") as f:
-        json.dump({"openrouter": {"apiKey": key}}, f, indent=2)
-    print(f"auth-profiles.json created (key prefix: {key[:15]}...)")
-else:
-    print("WARNING: OPENROUTER_API_KEY not found in .env!")
+cat > /root/.openclaw/agents/main/agent/auth-profiles.json << AUTHEOF
+{
+  "openrouter": {
+    "apiKey": "${openrouter_api_key}"
+  }
+}
 AUTHEOF
 
 openclaw gateway install --force
@@ -223,27 +217,39 @@ for _ in range(12):
         pass
     time.sleep(5)
 
-if not pending:
-    print("No pending requests — skipping")
-    sys.exit(0)
-
-with open(PAIRED_FILE) as f:
-    paired = json.load(f)
+# Even if no pending requests, approve operator.approvals for all paired devices.
+# The scope request may have been missed if pairing happened before the gateway started.
+try:
+    with open(PAIRED_FILE) as f:
+        paired = json.load(f)
+except Exception:
+    paired = {}
 
 for request in pending.values():
     device_id = request.get("deviceId")
-    if device_id not in paired:
-        continue
-    device = paired[device_id]
-    for key in ("scopes", "approvedScopes"):
-        if "operator.approvals" not in device.get(key, []):
-            device.setdefault(key, []).append("operator.approvals")
-    print(f"Approved: {device_id}")
+    if device_id in paired:
+        for key in ("scopes", "approvedScopes"):
+            if "operator.approvals" not in paired[device_id].get(key, []):
+                paired[device_id].setdefault(key, []).append("operator.approvals")
+        print(f"Approved via pending: {device_id}")
 
-with open(PAIRED_FILE, "w") as f:
-    json.dump(paired, f, indent=2)
-with open(PENDING_FILE, "w") as f:
-    json.dump({}, f)
+# Ensure all paired operator devices have operator.approvals regardless of pending state
+for device_id, device in paired.items():
+    if "operator" in device.get("roles", []):
+        for key in ("scopes", "approvedScopes"):
+            if "operator.approvals" not in device.get(key, []):
+                device.setdefault(key, []).append("operator.approvals")
+                print(f"Granted operator.approvals to {device_id[:16]}...")
+
+if paired:
+    with open(PAIRED_FILE, "w") as f:
+        json.dump(paired, f, indent=2)
+if pending:
+    with open(PENDING_FILE, "w") as f:
+        json.dump({}, f)
+
+if not pending and not paired:
+    print("No paired devices found — skipping")
 PYEOF
 
 systemctl --user restart openclaw-gateway.service
