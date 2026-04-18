@@ -68,6 +68,8 @@ resource "digitalocean_droplet" "openclaw" {
     brave_api_key          = var.brave_api_key
     swap_size              = var.swap_size
     telegram_owner_id      = var.telegram_owner_id
+    slack_app_token        = var.slack_app_token
+    slack_bot_token        = var.slack_bot_token
   })
 }
 
