@@ -8,12 +8,14 @@
 [![OpenRouter](https://img.shields.io/badge/OpenRouter-Free%20Tier-ff6b35?logoColor=white)](https://openrouter.ai)
 [![OpenClaw](https://img.shields.io/badge/OpenClaw-2026-00e5cc?logoColor=white)](https://openclaw.bot)
 [![Telegram](https://img.shields.io/badge/Telegram-Bot-26a5e4?logo=telegram&logoColor=white)](https://telegram.org)
+[![Slack](https://img.shields.io/badge/Slack-Bot-4a154b?logo=slack&logoColor=white)](https://slack.com)
 
-One-command deployment of an [OpenClaw](https://openclaw.bot) AI agent as a Telegram bot on DigitalOcean. After `terraform apply`, the bot is fully operational with no manual SSH steps required.
+One-command deployment of an [OpenClaw](https://openclaw.bot) AI agent on DigitalOcean with Telegram support and Slack support. After `terraform apply`, the bot is fully operational with no manual SSH steps required.
 
 ## Features
 
 - Telegram bot with DM and group chat support
+- Slack bot support (Socket Mode)
 - Web search via Brave Search (falls back to DuckDuckGo)
 - 8 switchable free LLM models via `/model <alias>`
 - Secrets managed via `.env` — never committed
@@ -26,6 +28,8 @@ One-command deployment of an [OpenClaw](https://openclaw.bot) AI agent as a Tele
 - DigitalOcean account + API token
 - OpenRouter API key
 - Telegram bot token (from [@BotFather](https://t.me/BotFather))
+- Slack App-Level token (starts with `xapp-`)
+- Slack Bot User OAuth token (starts with `xoxb-`)
 
 ## Setup
 
@@ -44,6 +48,8 @@ Edit `.env` and fill in your values:
 | `OPENCLAW_GATEWAY_TOKEN` | Any strong random string |
 | `BRAVE_API_KEY` | From [api.search.brave.com](https://api.search.brave.com) — optional, falls back to DuckDuckGo |
 | `TELEGRAM_OWNER_ID` | Your Telegram user ID from [@userinfobot](https://t.me/userinfobot) — grants `/model` and other privileged commands |
+| `SLACK_APP_TOKEN` | Slack App-Level token (starts with `xapp-`) |
+| `SLACK_BOT_TOKEN` | Slack Bot User OAuth token (starts with `xoxb-`) |
 
 ### 2. Configure infrastructure
 
@@ -89,17 +95,6 @@ Send a message to your bot on Telegram to confirm it's working.
 ## Switching Models
 
 In Telegram, use `/model <alias>`:
-
-| Alias | Model |
-|---|---|
-| `llama` | Llama 3.3 70B (default) |
-| `gemma` | Gemma 4 31B |
-| `hermes` | Hermes 3 Llama 405B |
-| `nemotron` | Nemotron Super 120B |
-| `gpt` | GPT-OSS 120B |
-| `coder` | Qwen3 Coder |
-| `uncensored` | Dolphin Mistral 24B |
-| `auto` | OpenRouter auto-select |
 
 All models are free tier on OpenRouter (rate limits apply).
 
