@@ -60,3 +60,15 @@ variable "telegram_owner_id" {
   description = "Your Telegram numeric user ID (get it from @userinfobot). Grants /model and other privileged commands."
   default     = ""
 }
+
+variable "slack_app_token" {
+  description = "Slack App-Level Token for Socket Mode connection (starts with 'xapp-')"
+  sensitive   = true
+  default     = ""
+}
+
+variable "slack_bot_token" {
+  description = "Slack Bot User OAuth Token for sending messages (starts with 'xoxb-')"
+  sensitive   = true
+  default     = ""
+}
