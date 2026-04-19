@@ -28,6 +28,20 @@ openrouter_api_key     = "sk-or-v1-your-key-here"
 telegram_bot_token     = "1234567890:your-token-here"
 openclaw_gateway_token = "your-secret-gateway-token"
 
+# ── Telegram (Optional) ─────────────────────────────────────
+# Your Telegram numeric user ID (get from @userinfobot)
+# Grants /model and other privileged commands. Leave empty ("") to disable
+telegram_owner_id = ""
+
+# ── Slack (Optional) ─────────────────────────────────────────
+# Slack App-Level Token for Socket Mode (from Slack App settings)
+# Must start with "xapp-". Leave empty ("") to disable Slack plugin
+slack_app_token = ""
+
+# Slack Bot User OAuth Token (from Slack App settings)
+# Must start with "xoxb-". Leave empty ("") to disable Slack plugin
+slack_bot_token = ""
+
 # ── Web Search ───────────────────────────────────────────────
 # Brave Search API key (https://api.search.brave.com/) — free tier: 1000 req/month
 # Leave empty ("") to fall back to DuckDuckGo (no key needed)
