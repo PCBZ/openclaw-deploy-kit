@@ -4,6 +4,10 @@ terraform {
       source  = "hashicorp/azurerm"
       version = "~> 3.0"
     }
+    null = {
+      source  = "hashicorp/null"
+      version = "~> 3.0"
+    }
   }
 }
 
@@ -246,4 +250,18 @@ resource "azurerm_role_assignment" "function_aci_management" {
   scope              = azurerm_resource_group.openclaw.id
   role_definition_name = "Contributor"
   principal_id       = azurerm_linux_function_app.openclaw.identity[0].principal_id
+}
+
+# ── Auto-deploy Function Code ────────────────────────────────
+# Automatically publishes Python functions to Azure after infrastructure is created
+
+resource "null_resource" "deploy_function" {
+  provisioner "local-exec" {
+    command = "cd ${path.module}/function && func azure functionapp publish ${azurerm_linux_function_app.openclaw.name}"
+  }
+
+  depends_on = [
+    azurerm_linux_function_app.openclaw,
+    azurerm_role_assignment.function_aci_management
+  ]
 }
