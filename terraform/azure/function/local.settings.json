@@ -1,0 +1,26 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "FUNCTIONS_WORKER_RUNTIME": "python",
+    "FUNCTIONS_EXTENSION_VERSION": "~4",
+    "PYTHON_VERSION": "3.10",
+    
+    "ACI_RESOURCE_GROUP": "openclaw-rg",
+    "ACI_CONTAINER_GROUP_NAME": "openclaw-container",
+    "ACI_ID": "your-aci-id-here",
+    "OPENCLAW_GATEWAY_IP": "10.x.x.x",
+    "OPENCLAW_GATEWAY_PORT": "18789",
+    
+    "IDLE_TIMEOUT_MINUTES": "30",
+    
+    "AZURE_SUBSCRIPTION_ID": "your-subscription-id",
+    "AZURE_TENANT_ID": "your-tenant-id",
+    "AZURE_CLIENT_ID": "your-client-id",
+    "AZURE_CLIENT_SECRET": "your-client-secret"
+  },
+  "Host": {
+    "CORS": "*",
+    "LocalHttpPort": 7071
+  }
+}
