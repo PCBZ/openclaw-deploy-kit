@@ -52,8 +52,64 @@ resource "azurerm_storage_share" "openclaw" {
   depends_on = [azurerm_storage_account.openclaw]
 }
 
-# ── Container Group (initially stopped) ───────────────────────
-# This container will be started by Azure Function on webhook trigger
+# ── Generate and Upload OpenClaw Configuration ──────────────
+# Create openclaw.json with Telegram and Slack configuration
+
+locals {
+  openclaw_config = templatefile("${path.module}/openclaw.json.tpl", {
+    openclaw_gateway_token = var.openclaw_gateway_token
+    openrouter_api_key     = var.openrouter_api_key
+    telegram_bot_token     = var.telegram_bot_token
+    telegram_owner_id      = var.telegram_owner_id
+    slack_app_token        = try(var.slack_app_token, "")
+    slack_bot_token        = try(var.slack_bot_token, "")
+    brave_api_key          = var.brave_api_key
+  })
+}
+
+# Write config locally for verification
+resource "local_file" "openclaw_config" {
+  content  = local.openclaw_config
+  filename = "${path.module}/.openclaw.json"
+}
+
+# Auto-upload config to File Share using Azure CLI
+resource "null_resource" "upload_openclaw_config" {
+  provisioner "local-exec" {
+    command = <<-EOT
+      set -e
+      
+      ACCOUNT_NAME="${azurerm_storage_account.openclaw.name}"
+      SHARE_NAME="${azurerm_storage_share.openclaw.name}"
+      RESOURCE_GROUP="${azurerm_resource_group.openclaw.name}"
+      CONFIG_FILE="${local_file.openclaw_config.filename}"
+      
+      # Get storage account key
+      STORAGE_KEY=$(az storage account keys list \
+        --account-name "$ACCOUNT_NAME" \
+        --resource-group "$RESOURCE_GROUP" \
+        --query "[0].value" -o tsv)
+      
+      # Upload config file
+      az storage file upload \
+        --account-name "$ACCOUNT_NAME" \
+        --account-key "$STORAGE_KEY" \
+        --share-name "$SHARE_NAME" \
+        --source "$CONFIG_FILE" \
+        --path "openclaw.json" \
+        --output none
+      
+      echo "✅ openclaw.json uploaded successfully"
+    EOT
+  }
+
+  depends_on = [
+    azurerm_storage_share.openclaw,
+    local_file.openclaw_config
+  ]
+}
+
+# ── Container Group ──────────────────────────────────────────
 
 resource "azurerm_container_group" "openclaw" {
   name                = var.container_group_name
@@ -70,16 +126,10 @@ resource "azurerm_container_group" "openclaw" {
     memory = var.memory_gb
 
     # Environment variables
-    # API Keys are loaded from .env file via TF_VAR_ environment variables
-    # Before running terraform: source .env or use direnv with .envrc
     environment_variables = {
       OPENROUTER_API_KEY     = try(var.openrouter_api_key, "")
-      TELEGRAM_BOT_TOKEN     = try(var.telegram_bot_token, "")
       OPENCLAW_GATEWAY_TOKEN = try(var.openclaw_gateway_token, "")
       BRAVE_API_KEY          = try(var.brave_api_key, "")
-      TELEGRAM_OWNER_ID      = try(var.telegram_owner_id, "")
-      SLACK_APP_TOKEN        = try(var.slack_app_token, "")
-      SLACK_BOT_TOKEN        = try(var.slack_bot_token, "")
       OPENCLAW_ONBOARD_NON_INTERACTIVE = "1"
     }
 
@@ -100,7 +150,7 @@ resource "azurerm_container_group" "openclaw" {
   }
 
   # Exposed ports for external access
-  exposed_ports {
+  exposed_port {
     port     = 18789
     protocol = "TCP"
   }
@@ -113,7 +163,10 @@ resource "azurerm_container_group" "openclaw" {
     app         = "openclaw"
   }
 
-  depends_on = [azurerm_storage_share.openclaw]
+  depends_on = [
+    azurerm_storage_share.openclaw,
+    null_resource.upload_openclaw_config
+  ]
 }
 
 # ── Network Security Group ───────────────────────────────────
@@ -204,9 +257,6 @@ resource "azurerm_linux_function_app" "openclaw" {
     http2_enabled                 = true
     app_scale_limit               = 200
     elastic_instance_minimum      = 0
-    
-    # For function timeout
-    function_app_scale_limit      = 200
   }
 
   # Application settings
@@ -245,23 +295,70 @@ resource "azurerm_linux_function_app" "openclaw" {
 }
 
 # ── Role Assignment for Function App to manage ACI ──────────
+# NOTE: Azure Student accounts may not have permission to create role assignments
+# If Terraform apply fails with authorization error, manually assign in Azure Portal:
+# 1. Go to Function App → Settings → Identity → copy Object ID
+# 2. Go to Resource Group → Access Control (IAM) → Add → Contributor role
+# 3. Paste the Object ID and save
 
-resource "azurerm_role_assignment" "function_aci_management" {
-  scope              = azurerm_resource_group.openclaw.id
-  role_definition_name = "Contributor"
-  principal_id       = azurerm_linux_function_app.openclaw.identity[0].principal_id
-}
+# resource "azurerm_role_assignment" "function_aci_management" {
+#   scope              = azurerm_resource_group.openclaw.id
+#   role_definition_name = "Contributor"
+#   principal_id       = azurerm_linux_function_app.openclaw.identity[0].principal_id
+# }
 
 # ── Auto-deploy Function Code ────────────────────────────────
 # Automatically publishes Python functions to Azure after infrastructure is created
+# Note: Ignores trigger sync errors which are non-critical
 
 resource "null_resource" "deploy_function" {
   provisioner "local-exec" {
-    command = "cd ${path.module}/function && func azure functionapp publish ${azurerm_linux_function_app.openclaw.name}"
+    command = <<-EOT
+      cd ${path.module}/function
+      OUTPUT=$(func azure functionapp publish ${azurerm_linux_function_app.openclaw.name} 2>&1 || true)
+      echo "$OUTPUT"
+      
+      # Check if deployment succeeded despite trigger sync error
+      if echo "$OUTPUT" | grep -q "Remote build succeeded"; then
+        exit 0
+      else
+        exit 1
+      fi
+    EOT
   }
 
   depends_on = [
-    azurerm_linux_function_app.openclaw,
-    azurerm_role_assignment.function_aci_management
+    azurerm_linux_function_app.openclaw
+  ]
+}
+
+# Verify config was uploaded
+resource "null_resource" "verify_config_upload" {
+  provisioner "local-exec" {
+    command = <<-EOT
+      echo "Verifying openclaw.json was uploaded to File Share..."
+      STORAGE_KEY=$(az storage account keys list \
+        --account-name ${azurerm_storage_account.openclaw.name} \
+        --resource-group ${azurerm_resource_group.openclaw.name} \
+        --query "[0].value" -o tsv)
+      
+      FILE_EXISTS=$(az storage file exists \
+        --account-name ${azurerm_storage_account.openclaw.name} \
+        --account-key "$STORAGE_KEY" \
+        --share-name ${azurerm_storage_share.openclaw.name} \
+        --path "openclaw.json" \
+        --query "exists" -o tsv)
+      
+      if [ "$FILE_EXISTS" = "true" ]; then
+        echo "✅ openclaw.json verified in File Share"
+      else
+        echo "❌ ERROR: openclaw.json not found in File Share"
+        exit 1
+      fi
+    EOT
+  }
+
+  depends_on = [
+    null_resource.upload_openclaw_config
   ]
 }
