@@ -27,21 +27,21 @@ variable "location" {
   type        = string
 }
 
-# ── B1s VM Configuration ────────────────────────────────────
+# ── VM Configuration ────────────────────────────────────────
 variable "vm_name" {
-  description = "Name of the B1s VM"
+  description = "Name of the VM"
   type        = string
-  default     = "openclaw-b1s"
+  default     = "openclaw-b2pts"
 }
 
 variable "vm_size" {
-  description = "Azure VM SKU (B1s = free tier: 1vCPU, 1GB RAM)"
+  description = "Azure VM SKU"
   type        = string
-  default     = "Standard_B1s"
+  default     = "Standard_B2pts_v2"
 }
 
 variable "os_disk_size_gb" {
-  description = "OS disk size in GB (B1s includes 4GB temp disk at /mnt/resource)"
+  description = "OS disk size in GB"
   type        = number
   default     = 30
 }
@@ -76,14 +76,14 @@ variable "gateway_allowed_cidrs" {
 variable "public_ip_name" {
   description = "Name of static public IP"
   type        = string
-  default     = "openclaw-b1s-public-ip"
+  default     = "openclaw-b2pts-public-ip"
 }
 
 # ── OpenClaw Configuration ─────────────────────────────────
 variable "swap_size" {
-  description = "Swap file size in GB (allocate from 4GB temp disk at /mnt/resource)"
+  description = "Swap file size in GB"
   type        = number
-  default     = 3
+  default     = 2
 }
 
 variable "openclaw_memory_limit_mb" {

@@ -9,8 +9,6 @@ export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 apt-get update -y
 
 # ── Create swap with temp-disk fallback ──────────────────────
-# Some VM sizes (especially Arm variants) may not expose /mnt/resource.
-# Prefer temp disk when present, otherwise fall back to root disk.
 swap_size_gb=${swap_size}
 swap_size_mb=$((swap_size_gb * 1024))
 swap_path="/mnt/resource/swapfile"
@@ -31,8 +29,6 @@ else
 fi
 
 # ── Kernel swappiness tuning ─────────────────────────────────
-# Lower swappiness = prioritize RAM, use swap only when necessary
-# Prevents excessive swap thrashing when memory is tight
 cat > /etc/sysctl.d/99-swappiness.conf << 'SYSCTLEOF'
 vm.swappiness = 20
 vm.overcommit_memory = 1
