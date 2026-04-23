@@ -127,53 +127,12 @@ systemctl --user restart openclaw-gateway.service
 echo "Waiting for approval requests..."
 sleep 120
 
-python3 << 'PYEOF'
-import json, sys, time
-
-PENDING_FILE = "/root/.openclaw/devices/pending.json"
-PAIRED_FILE  = "/root/.openclaw/devices/paired.json"
-
-pending = {}
-for _ in range(12):
-    try:
-        with open(PENDING_FILE) as f:
-            pending = json.load(f)
-        if pending:
-            break
-    except Exception:
-        pass
-    time.sleep(5)
-
-# Even if no pending requests, approve operator.approvals for all paired devices.
-try:
-    with open(PAIRED_FILE) as f:
-        paired = json.load(f)
-except Exception:
-    paired = {}
-
-for request in pending.values():
-    device_id = request.get("deviceId")
-    if device_id in paired:
-        for key in ("scopes", "approvedScopes"):
-            if "operator.approvals" not in paired[device_id].get(key, []):
-                paired[device_id].setdefault(key, []).append("operator.approvals")
-        print(f"Approved via pending: {device_id}")
-
-# Ensure all paired operator devices have operator.approvals regardless of pending state
-for device_id, device in paired.items():
-    if "operator" in device.get("roles", []):
-        for key in ("scopes", "approvedScopes"):
-            if "operator.approvals" not in device.get(key, []):
-                device.setdefault(key, []).append("operator.approvals")
-                print(f"Granted operator.approvals to {device_id[:16]}...")
-
-if paired:
-    with open(PAIRED_FILE, "w") as f:
-        json.dump(paired, f, indent=2)
-if pending:
-    with open(PENDING_FILE, "w") as f:
-        json.dump({}, f)
-PYEOF
+mkdir -p /root/.openclaw/bootstrap
+cat > /root/.openclaw/bootstrap/approve_operator_approvals.py << 'APPROVEPYEOF'
+${approve_operator_script}
+APPROVEPYEOF
+chmod 700 /root/.openclaw/bootstrap/approve_operator_approvals.py
+python3 /root/.openclaw/bootstrap/approve_operator_approvals.py
 
 # ── 8. Setup unattended security updates ─────────────────────
 apt-get install -y unattended-upgrades
@@ -195,12 +154,13 @@ cat > /etc/cron.d/openclaw-cleanup << 'CRONEOF'
 # OpenClaw cleanup and maintenance tasks
 SHELL=/bin/bash
 PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+CRON_TZ=America/Los_Angeles
 
-# Weekly npm cache cleanup (Sunday 2AM UTC)
+# Weekly npm cache cleanup (Sunday 2:00 Pacific)
 0 2 * * 0 root npm cache clean --force >> /var/log/openclaw-cleanup.log 2>&1
 
-# Daily disk space logging (1AM UTC)
-0 1 * * * root df -h > /var/log/openclaw-diskspace.log 2>&1
+# Daily disk space logging (2:00 Pacific)
+0 2 * * * root df -h > /var/log/openclaw-diskspace.log 2>&1
 CRONEOF
 
 # ── 10. Setup logrotate for OpenClaw logs ────────────────────
