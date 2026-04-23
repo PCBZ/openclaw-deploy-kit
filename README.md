@@ -1,4 +1,4 @@
-# OpenClaw on DigitalOcean + Azure
+# OpenClaw on DigitalOcean + Azure + GCP
 
 [![Security Checks](https://github.com/PCBZ/OpenClaw_Docker/actions/workflows/security.yml/badge.svg)](https://github.com/PCBZ/OpenClaw_Docker/actions/workflows/security.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
@@ -6,12 +6,13 @@
 [![Terraform](https://img.shields.io/badge/Terraform-%3E%3D1.5-844fba?logo=terraform&logoColor=white)](https://www.terraform.io)
 [![DigitalOcean](https://img.shields.io/badge/DigitalOcean-Droplet-0080ff?logo=digitalocean&logoColor=white)](https://www.digitalocean.com)
 [![Azure](https://img.shields.io/badge/Azure-VM-0078d4?logo=microsoft-azure&logoColor=white)](https://azure.microsoft.com)
+[![GCP](https://img.shields.io/badge/GCP-ComputeEngine-4285f4?logo=googlecloud&logoColor=white)](https://cloud.google.com)
 [![OpenRouter](https://img.shields.io/badge/OpenRouter-Free%20Tier-ff6b35?logoColor=white)](https://openrouter.ai)
 [![OpenClaw](https://img.shields.io/badge/OpenClaw-2026-00e5cc?logoColor=white)](https://openclaw.bot)
 [![Telegram](https://img.shields.io/badge/Telegram-Bot-26a5e4?logo=telegram&logoColor=white)](https://telegram.org)
 [![Slack](https://img.shields.io/badge/Slack-Bot-4a154b?logo=slack&logoColor=white)](https://slack.com)
 
-One-command deployment of an [OpenClaw](https://openclaw.bot) AI agent on DigitalOcean or Azure VM with Telegram and Slack support. After `terraform apply`, the bot is fully operational with no manual SSH steps required.
+One-command deployment of an [OpenClaw](https://openclaw.bot) AI agent on DigitalOcean, Azure VM, or GCP Compute Engine with Telegram and Slack support. After `terraform apply`, the bot is fully operational with no manual SSH steps required.
 
 ## Features
 
@@ -28,6 +29,7 @@ One-command deployment of an [OpenClaw](https://openclaw.bot) AI agent on Digita
 - SSH key pair
 - DigitalOcean account + API token (for DO path)
 - Azure subscription + service principal credentials (for Azure path)
+- GCP project + Compute Engine API + credentials (for GCP path)
 - OpenRouter API key
 - Telegram bot token (from [@BotFather](https://t.me/BotFather))
 - Slack App-Level token (starts with `xapp-`)
@@ -94,6 +96,28 @@ vm_size             = "Standard_B2pts_v2"
 os_disk_size_gb     = 30
 swap_size           = 2
 openclaw_memory_limit_mb = 800
+```
+
+#### Option C: GCP VM
+
+```bash
+cd terraform/gcp_vm
+```
+
+Create `terraform.tfvars` and set your GCP + VM values:
+
+```hcl
+project_id           = "your-gcp-project-id"
+region               = "us-west1"
+zone                 = "us-west1-b"
+machine_type         = "e2-micro"
+boot_disk_size_gb    = 30
+ssh_public_key_path  = "~/.ssh/id_rsa.pub"
+swap_size            = 3
+openclaw_memory_limit_mb = 800
+
+# Optional: if not using ADC
+# gcp_credentials_json = file("path/to/service-account.json")
 ```
 
 ### 3. Load secrets via direnv
