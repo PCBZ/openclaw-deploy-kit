@@ -1,16 +1,17 @@
-# OpenClaw on DigitalOcean
+# OpenClaw on DigitalOcean + Azure
 
 [![Security Checks](https://github.com/PCBZ/OpenClaw_Docker/actions/workflows/security.yml/badge.svg)](https://github.com/PCBZ/OpenClaw_Docker/actions/workflows/security.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Last Commit](https://img.shields.io/github/last-commit/PCBZ/OpenClaw_Docker)](https://github.com/PCBZ/OpenClaw_Docker/commits/main)
 [![Terraform](https://img.shields.io/badge/Terraform-%3E%3D1.5-844fba?logo=terraform&logoColor=white)](https://www.terraform.io)
 [![DigitalOcean](https://img.shields.io/badge/DigitalOcean-Droplet-0080ff?logo=digitalocean&logoColor=white)](https://www.digitalocean.com)
+[![Azure](https://img.shields.io/badge/Azure-VM-0078d4?logo=microsoft-azure&logoColor=white)](https://azure.microsoft.com)
 [![OpenRouter](https://img.shields.io/badge/OpenRouter-Free%20Tier-ff6b35?logoColor=white)](https://openrouter.ai)
 [![OpenClaw](https://img.shields.io/badge/OpenClaw-2026-00e5cc?logoColor=white)](https://openclaw.bot)
 [![Telegram](https://img.shields.io/badge/Telegram-Bot-26a5e4?logo=telegram&logoColor=white)](https://telegram.org)
 [![Slack](https://img.shields.io/badge/Slack-Bot-4a154b?logo=slack&logoColor=white)](https://slack.com)
 
-One-command deployment of an [OpenClaw](https://openclaw.bot) AI agent on DigitalOcean with Telegram support and Slack support. After `terraform apply`, the bot is fully operational with no manual SSH steps required.
+One-command deployment of an [OpenClaw](https://openclaw.bot) AI agent on DigitalOcean or Azure VM with Telegram and Slack support. After `terraform apply`, the bot is fully operational with no manual SSH steps required.
 
 ## Features
 
@@ -25,7 +26,8 @@ One-command deployment of an [OpenClaw](https://openclaw.bot) AI agent on Digita
 - Terraform >= 1.5
 - direnv (`brew install direnv`)
 - SSH key pair
-- DigitalOcean account + API token
+- DigitalOcean account + API token (for DO path)
+- Azure subscription + service principal credentials (for Azure path)
 - OpenRouter API key
 - Telegram bot token (from [@BotFather](https://t.me/BotFather))
 - Slack App-Level token (starts with `xapp-`)
@@ -51,7 +53,9 @@ Edit `.env` and fill in your values:
 | `SLACK_APP_TOKEN` | Slack App-Level token (starts with `xapp-`) |
 | `SLACK_BOT_TOKEN` | Slack Bot User OAuth token (starts with `xoxb-`) |
 
-### 2. Configure infrastructure
+### 2. Choose deployment target
+
+#### Option A: DigitalOcean
 
 ```bash
 cd terraform/digitalOcean
@@ -65,6 +69,31 @@ ssh_public_key_path = "~/.ssh/id_rsa.pub"
 region              = "tor1"   # tor1, sfo3, nyc3, sgp1, ams3, ...
 droplet_size        = "s-1vcpu-1gb"  # $6/mo — increase if OOM
 swap_size           = "3G"
+```
+
+#### Option B: Azure VM
+
+```bash
+cd terraform/azure_vm
+```
+
+Create `terraform.tfvars` and set your Azure + VM values:
+
+```hcl
+subscription_id     = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+tenant_id           = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+client_id           = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+client_secret       = "..."
+
+resource_group_name = "your-existing-rg"
+location            = "eastus"
+ssh_public_key_path = "~/.ssh/id_rsa.pub"
+
+vm_name             = "openclaw-b2pts"
+vm_size             = "Standard_B2pts_v2"
+os_disk_size_gb     = 30
+swap_size           = 2
+openclaw_memory_limit_mb = 800
 ```
 
 ### 3. Load secrets via direnv
