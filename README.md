@@ -102,9 +102,10 @@ openclaw_memory_limit_mb = 800
 
 ```bash
 cd terraform/gcp_vm
+cp terraform.tfvars.example terraform.tfvars
 ```
 
-Create `terraform.tfvars` and set your GCP + VM values:
+Edit `terraform.tfvars` and set your GCP + VM values:
 
 ```hcl
 project_id           = "your-gcp-project-id"
