@@ -110,18 +110,27 @@ Edit `terraform.tfvars`:
 ```hcl
 project_id = "your-gcp-project-id"
 region     = "us-west1"
-service_name    = "openclaw"
-container_image = "ghcr.io/openclaw/openclaw:latest"
-bucket_name     = "your-gcp-project-id-openclaw-state"
-min_instances   = 1
-max_instances   = 3
+service_name           = "openclaw"
+
+# Leave empty to use Artifact Registry GHCR proxy
+container_image        = ""
+enable_ghcr_proxy      = true
+ghcr_remote_repository_id = "ghcr-remote"
+ghcr_image_path        = "openclaw/openclaw"
+ghcr_image_tag         = "latest"
+
+bucket_name            = "your-gcp-project-id-openclaw-state"
+min_instances          = 1
+max_instances          = 1
 ```
 
 Cloud Run deployment in this repo uses:
 - `2 vCPU`, `4Gi` memory
 - CPU always allocated (`cpu_idle = false`)
 - `min_instances = 1`
-- Persistent state via mounted GCS bucket
+- Runtime state on local ephemeral storage (`/tmp/openclaw-state`) for startup stability
+- Config persistence via mounted GCS bucket (`openclaw.json`, mounted read-only)
+- `bonjour` plugin disabled for Cloud Run compatibility (avoids mDNS probing crash loop)
 
 ### 3. Load secrets via direnv
 
@@ -143,10 +152,19 @@ Wait ~5 minutes for bootstrap to complete. The bot will start automatically.
 ### 5. Verify
 
 ```bash
-terraform output ssh_command   # SSH into the server if needed
+terraform output cloud_run_url
 ```
 
-Send a message to your bot on Telegram to confirm it's working.
+Then:
+- Open the Cloud Run URL to confirm service is reachable.
+- Send a Telegram message to confirm bot response.
+- (Optional) send a Slack message if Slack tokens are configured.
+
+## Cloud Run Notes
+
+- This Cloud Run setup intentionally does **not** persist full runtime/plugin cache state.
+- Only required static/config artifacts are persisted in GCS.
+- If you destroy infra but want to keep APIs enabled, this repo sets `disable_on_destroy = false` for required GCP services.
 
 ## Switching Models
 
