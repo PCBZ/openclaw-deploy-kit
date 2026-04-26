@@ -1,4 +1,4 @@
-# OpenClaw on DigitalOcean + Azure
+# OpenClaw on DigitalOcean + Azure + GCP
 
 [![Security Checks](https://github.com/PCBZ/OpenClaw_Docker/actions/workflows/security.yml/badge.svg)](https://github.com/PCBZ/OpenClaw_Docker/actions/workflows/security.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
@@ -6,12 +6,13 @@
 [![Terraform](https://img.shields.io/badge/Terraform-%3E%3D1.5-844fba?logo=terraform&logoColor=white)](https://www.terraform.io)
 [![DigitalOcean](https://img.shields.io/badge/DigitalOcean-Droplet-0080ff?logo=digitalocean&logoColor=white)](https://www.digitalocean.com)
 [![Azure](https://img.shields.io/badge/Azure-VM-0078d4?logo=microsoft-azure&logoColor=white)](https://azure.microsoft.com)
+[![GCP](https://img.shields.io/badge/GCP-CloudRun-4285F4?logo=googlecloud&logoColor=white)](https://cloud.google.com/run)
 [![OpenRouter](https://img.shields.io/badge/OpenRouter-Free%20Tier-ff6b35?logoColor=white)](https://openrouter.ai)
 [![OpenClaw](https://img.shields.io/badge/OpenClaw-2026-00e5cc?logoColor=white)](https://openclaw.bot)
 [![Telegram](https://img.shields.io/badge/Telegram-Bot-26a5e4?logo=telegram&logoColor=white)](https://telegram.org)
 [![Slack](https://img.shields.io/badge/Slack-Bot-4a154b?logo=slack&logoColor=white)](https://slack.com)
 
-One-command deployment of an [OpenClaw](https://openclaw.bot) AI agent on DigitalOcean or Azure VM with Telegram and Slack support. After `terraform apply`, the bot is fully operational with no manual SSH steps required.
+One-command deployment of an [OpenClaw](https://openclaw.bot) AI agent on DigitalOcean, Azure VM, or GCP Cloud Run with Telegram and Slack support. After `terraform apply`, the bot is fully operational with no manual SSH steps required.
 
 ## Features
 
@@ -28,6 +29,7 @@ One-command deployment of an [OpenClaw](https://openclaw.bot) AI agent on Digita
 - SSH key pair
 - DigitalOcean account + API token (for DO path)
 - Azure subscription + service principal credentials (for Azure path)
+- GCP project with Cloud Run + Storage + Secret Manager enabled (for Cloud Run path)
 - OpenRouter API key
 - Telegram bot token (from [@BotFather](https://t.me/BotFather))
 - Slack App-Level token (starts with `xapp-`)
@@ -95,6 +97,31 @@ os_disk_size_gb     = 30
 swap_size           = 2
 openclaw_memory_limit_mb = 800
 ```
+
+#### Option C: GCP Cloud Run
+
+```bash
+cd terraform/gcp_cloudrun
+cp terraform.tfvars.example terraform.tfvars
+```
+
+Edit `terraform.tfvars`:
+
+```hcl
+project_id = "your-gcp-project-id"
+region     = "us-west1"
+service_name    = "openclaw"
+container_image = "ghcr.io/openclaw/openclaw:latest"
+bucket_name     = "your-gcp-project-id-openclaw-state"
+min_instances   = 1
+max_instances   = 3
+```
+
+Cloud Run deployment in this repo uses:
+- `2 vCPU`, `4Gi` memory
+- CPU always allocated (`cpu_idle = false`)
+- `min_instances = 1`
+- Persistent state via mounted GCS bucket
 
 ### 3. Load secrets via direnv
 
