@@ -1,0 +1,47 @@
+# Copy to terraform.tfvars and fill in your values
+# cp terraform.tfvars.example terraform.tfvars
+
+# -- Azure Auth -------------------------------------------------
+# From Azure AD App Registration / Service Principal
+subscription_id = "your-azure-subscription-id"
+client_id       = "your-azure-client-id"
+client_secret   = "your-azure-client-secret"
+tenant_id       = "your-azure-tenant-id"
+
+# -- Azure Resource Group --------------------------------------
+# Resource group must already exist
+resource_group_name = "your-resource-group-name"
+# Regions: eastus, westus, canadaeast, japaneast, westeurope
+location            = "eastus"
+
+# -- VM ---------------------------------------------------------
+vm_name         = "openclaw-b2pts"
+# Example SKU: Standard_B2pts_v2, Standard_B1s, Standard_B2s
+vm_size         = "Standard_B2pts_v2"
+os_disk_size_gb = 30
+
+# -- SSH --------------------------------------------------------
+admin_username      = "azureuser"
+ssh_public_key_path = "~/.ssh/id_rsa.pub"
+
+# Restrict ingress to trusted CIDRs.
+# Replace with your own public IP/CIDR ranges.
+ssh_allowed_cidrs     = ["203.0.113.10/32"]
+gateway_allowed_cidrs = ["203.0.113.10/32"]
+
+# -- OpenClaw Runtime ------------------------------------------
+# Swap file size in GB
+swap_size = 2
+# Hard memory limit for OpenClaw systemd service (MB)
+openclaw_memory_limit_mb = 800
+
+# -- Secrets / Integrations ------------------------------------
+# These are loaded from project root `.env` via `azure_vm/.envrc`
+# and exported as TF_VAR_* variables, so do not define them here:
+# - openrouter_api_key
+# - telegram_bot_token
+# - openclaw_gateway_token
+# - brave_api_key
+# - telegram_owner_id
+# - slack_app_token
+# - slack_bot_token
