@@ -83,7 +83,7 @@ jobs:
       - name: Run Checkov on Terraform
         uses: bridgecrewio/checkov-action@v12
         with:
-          directory: terraform/digitalOcean
+          directory: terraform
           framework: terraform
           skip_check: CKV_DIO_4
           quiet: true
