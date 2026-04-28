@@ -85,7 +85,8 @@ jobs:
         with:
           directory: terraform
           framework: terraform
-          skip_check: CKV_DIO_4
+          # Keep public IP checks skipped for direct-access deployment targets.
+          skip_check: CKV_DIO_4,CKV_AZURE_119,CKV_GCP_40
           quiet: true
           output_format: cli,sarif
           output_file_path: console,checkov.sarif
