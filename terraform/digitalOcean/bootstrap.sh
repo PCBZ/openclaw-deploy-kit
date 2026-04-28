@@ -97,7 +97,7 @@ cat > /root/.openclaw/openclaw.json << JSONEOF
       "accounts": {
         "default": {
           "botToken": "${telegram_bot_token}",
-          "dmPolicy": "open",
+          "dmPolicy": "allowlist",
           "groupPolicy": "open"%{if telegram_owner_id != ""},
           "allowFrom": ["${telegram_owner_id}"]%{endif}
         }

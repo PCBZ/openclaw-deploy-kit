@@ -6,13 +6,13 @@
 [![Terraform](https://img.shields.io/badge/Terraform-%3E%3D1.5-844fba?logo=terraform&logoColor=white)](https://www.terraform.io)
 [![DigitalOcean](https://img.shields.io/badge/DigitalOcean-Droplet-0080ff?logo=digitalocean&logoColor=white)](https://www.digitalocean.com)
 [![Azure](https://img.shields.io/badge/Azure-VM-0078d4?logo=microsoft-azure&logoColor=white)](https://azure.microsoft.com)
-[![GCP](https://img.shields.io/badge/GCP-ComputeEngine-4285f4?logo=googlecloud&logoColor=white)](https://cloud.google.com)
+[![GCP](https://img.shields.io/badge/GCP-CloudRun-4285F4?logo=googlecloud&logoColor=white)](https://cloud.google.com/run)
 [![OpenRouter](https://img.shields.io/badge/OpenRouter-Free%20Tier-ff6b35?logoColor=white)](https://openrouter.ai)
 [![OpenClaw](https://img.shields.io/badge/OpenClaw-2026-00e5cc?logoColor=white)](https://openclaw.bot)
 [![Telegram](https://img.shields.io/badge/Telegram-Bot-26a5e4?logo=telegram&logoColor=white)](https://telegram.org)
 [![Slack](https://img.shields.io/badge/Slack-Bot-4a154b?logo=slack&logoColor=white)](https://slack.com)
 
-One-command deployment of an [OpenClaw](https://openclaw.bot) AI agent on DigitalOcean, Azure VM, or GCP Compute Engine with Telegram and Slack support. After `terraform apply`, the bot is fully operational with no manual SSH steps required.
+One-command deployment of an [OpenClaw](https://openclaw.bot) AI agent on DigitalOcean, Azure VM, or GCP Cloud Run with Telegram and Slack support. After `terraform apply`, the bot is fully operational with no manual SSH steps required.
 
 ## Features
 
@@ -29,7 +29,7 @@ One-command deployment of an [OpenClaw](https://openclaw.bot) AI agent on Digita
 - SSH key pair
 - DigitalOcean account + API token (for DO path)
 - Azure subscription + service principal credentials (for Azure path)
-- GCP project + Compute Engine API + credentials (for GCP path)
+- GCP project with Cloud Run + Storage + Secret Manager enabled (for Cloud Run path)
 - OpenRouter API key
 - Telegram bot token (from [@BotFather](https://t.me/BotFather))
 - Slack App-Level token (starts with `xapp-`)
@@ -98,28 +98,39 @@ swap_size           = 2
 openclaw_memory_limit_mb = 800
 ```
 
-#### Option C: GCP VM
+#### Option C: GCP Cloud Run
 
 ```bash
-cd terraform/gcp_vm
+cd terraform/gcp_cloudrun
 cp terraform.tfvars.example terraform.tfvars
 ```
 
-Edit `terraform.tfvars` and set your GCP + VM values:
+Edit `terraform.tfvars`:
 
 ```hcl
-project_id           = "your-gcp-project-id"
-region               = "us-west1"
-zone                 = "us-west1-b"
-machine_type         = "e2-micro"
-boot_disk_size_gb    = 30
-ssh_public_key_path  = "~/.ssh/id_rsa.pub"
-swap_size            = 3
-openclaw_memory_limit_mb = 800
+project_id = "your-gcp-project-id"
+region     = "us-west1"
+service_name           = "openclaw"
 
-# Optional: if not using ADC
-# gcp_credentials_json = file("path/to/service-account.json")
+# Leave empty to use Artifact Registry GHCR proxy
+container_image        = ""
+enable_ghcr_proxy      = true
+ghcr_remote_repository_id = "ghcr-remote"
+ghcr_image_path        = "openclaw/openclaw"
+ghcr_image_tag         = "latest"
+
+bucket_name            = "your-gcp-project-id-openclaw-state"
+min_instances          = 1
+max_instances          = 1
 ```
+
+Cloud Run deployment in this repo uses:
+- `2 vCPU`, `4Gi` memory
+- CPU always allocated (`cpu_idle = false`)
+- `min_instances = 1`
+- Runtime state on local ephemeral storage (`/tmp/openclaw-state`) for startup stability
+- Config persistence via mounted GCS bucket (`openclaw.json`, mounted read-only)
+- `bonjour` plugin disabled for Cloud Run compatibility (avoids mDNS probing crash loop)
 
 ### 3. Load secrets via direnv
 
@@ -141,10 +152,19 @@ Wait ~5 minutes for bootstrap to complete. The bot will start automatically.
 ### 5. Verify
 
 ```bash
-terraform output ssh_command   # SSH into the server if needed
+terraform output cloud_run_url
 ```
 
-Send a message to your bot on Telegram to confirm it's working.
+Then:
+- Open the Cloud Run URL to confirm service is reachable.
+- Send a Telegram message to confirm bot response.
+- (Optional) send a Slack message if Slack tokens are configured.
+
+## Cloud Run Notes
+
+- This Cloud Run setup intentionally does **not** persist full runtime/plugin cache state.
+- Only required static/config artifacts are persisted in GCS.
+- If you destroy infra but want to keep APIs enabled, this repo sets `disable_on_destroy = false` for required GCP services.
 
 ## Switching Models
 
