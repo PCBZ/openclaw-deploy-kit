@@ -1,0 +1,36 @@
+# Copy to terraform.tfvars and fill in your values
+# cp terraform.tfvars.example terraform.tfvars
+#
+# Secrets: use repo root .env + direnv (terraform/gcp_vm/.envrc -> TF_VAR_*).
+# Set GCP_PROJECT_ID and GCP_CREDENTIALS_FILE in .env (see README).
+
+# ── GCP Core ────────────────────────────────────────────────
+project_id = "your-gcp-project-id"
+region     = "us-west1"   # Oregon
+zone       = "us-west1-b"
+
+# Optional: only if not using ADC or GCP_CREDENTIALS_FILE via .env
+# gcp_credentials_json = file("path/to/service-account.json")
+
+# ── VM Configuration ────────────────────────────────────────
+vm_name           = "openclaw-e2-micro"
+machine_type      = "e2-micro"   # Always Free tier friendly; use e2-small if OOM
+boot_disk_size_gb = 30
+
+# ── SSH / Network Access ────────────────────────────────────
+admin_username      = "openclaw"
+ssh_public_key_path = "~/.ssh/id_rsa.pub"
+network_name        = "default"
+
+# Firewall: IPv4 and IPv6 CIDRs are split into separate GCP rules automatically.
+# Replace with your public IP/CIDR. For dev-only wide open (not recommended):
+# ssh_allowed_cidrs = ["0.0.0.0/0"]
+# gateway_allowed_cidrs = ["0.0.0.0/0"]
+# Optional IPv6, e.g. your ISP prefix or ::/0 for testing:
+# ssh_allowed_cidrs = ["203.0.113.10/32", "2001:db8::/32"]
+ssh_allowed_cidrs     = ["203.0.113.10/32"]
+gateway_allowed_cidrs = ["203.0.113.10/32"]
+
+# ── Runtime Limits ──────────────────────────────────────────
+swap_size                = 3
+openclaw_memory_limit_mb = 800
