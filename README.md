@@ -12,7 +12,7 @@
 [![Telegram](https://img.shields.io/badge/Telegram-Bot-26a5e4?logo=telegram&logoColor=white)](https://telegram.org)
 [![Slack](https://img.shields.io/badge/Slack-Bot-4a154b?logo=slack&logoColor=white)](https://slack.com)
 
-One-command deployment of an [OpenClaw](https://openclaw.bot) AI agent on DigitalOcean, Azure VM, or GCP VM with Telegram and Slack support. After `terraform apply`, the bot is fully operational with no manual SSH steps required.
+One-command deployment of an [OpenClaw](https://openclaw.bot) AI agent on DigitalOcean, Azure VM, GCP VM, or GCP Cloud Run with Telegram and Slack support.
 
 ## Features
 
@@ -29,7 +29,7 @@ One-command deployment of an [OpenClaw](https://openclaw.bot) AI agent on Digita
 - SSH key pair
 - DigitalOcean account + API token (for DO path)
 - Azure subscription + service principal credentials (for Azure path)
-- GCP project with Compute Engine API enabled (for GCP VM path)
+- GCP project (for GCP VM or GCP Cloud Run path)
 - OpenRouter API key
 - Telegram bot token (from [@BotFather](https://t.me/BotFather))
 - Slack App-Level token (starts with `xapp-`)
@@ -57,7 +57,12 @@ Edit `.env` and fill in your values:
 
 ### 2. Choose deployment target
 
-#### Option A: DigitalOcean
+
+### <span style="font-size:1.35em;font-weight:bold;">DigitalOcean</span>
+
+[![DigitalOcean](https://img.shields.io/badge/DigitalOcean-Droplet-0080ff?logo=digitalocean&logoColor=white)](https://www.digitalocean.com)
+
+#### <span style="font-size:1.15em;font-weight:bold;">Droplet</span>
 
 ```bash
 cd terraform/digitalOcean
@@ -73,7 +78,12 @@ droplet_size        = "s-1vcpu-1gb"  # $6/mo — increase if OOM
 swap_size           = "3G"
 ```
 
-#### Option B: Azure VM
+
+### <span style="font-size:1.35em;font-weight:bold;">Azure</span>
+
+[![Azure](https://img.shields.io/badge/Azure-VM-0078d4?logo=microsoft-azure&logoColor=white)](https://azure.microsoft.com)
+
+#### <span style="font-size:1.15em;font-weight:bold;">Virtual Machine</span>
 
 ```bash
 cd terraform/azure_vm
@@ -98,7 +108,13 @@ swap_size           = 2
 openclaw_memory_limit_mb = 800
 ```
 
-#### Option C: GCP VM
+
+### <span style="font-size:1.35em;font-weight:bold;">GCP</span>
+
+[![GCP Compute Engine](https://img.shields.io/badge/GCP-ComputeEngine-4285F4?logo=googlecloud&logoColor=white)](https://cloud.google.com/compute)
+
+
+#### <span style="font-size:1.15em;font-weight:bold;">Compute Engine</span>
 
 ```bash
 cd terraform/gcp_vm
@@ -133,6 +149,37 @@ GCP VM deployment in this repo uses:
 - optional swap + systemd memory cap for OpenClaw process
 - firewall rules for SSH (`22`) and OpenClaw gateway (`18789`)
 
+
+#### <span style="font-size:1.15em;font-weight:bold;">Cloud Run</span>
+
+```bash
+cd terraform/gcp_cloudrun
+cp terraform.tfvars.example terraform.tfvars
+```
+
+Edit `terraform.tfvars`:
+
+```hcl
+project_id = "your-gcp-project-id"
+region     = "us-west1"
+
+service_name  = "openclaw"
+min_instances = 1
+max_instances = 3
+
+ghcr_remote_repository_id = "ghcr-remote"
+ghcr_image_path = "openclaw/openclaw"
+ghcr_image_tag  = "latest"
+
+bucket_name = "your-gcp-project-id-openclaw-state"
+```
+
+GCP Cloud Run deployment in this repo uses:
+- Cloud Run service (managed runtime, no VM SSH needed)
+- Artifact Registry remote repo proxy for GHCR images
+- Secret Manager for runtime secrets
+- GCS bucket for persistent state
+
 ### 3. Load secrets via direnv
 
 ```bash
@@ -152,12 +199,21 @@ Wait ~5 minutes for bootstrap to complete. The bot will start automatically.
 
 ### 5. Verify
 
+For VM targets (DigitalOcean / Azure VM / GCP VM):
+
 ```bash
 terraform output ssh_command
 ```
 
+For GCP Cloud Run target:
+
+```bash
+terraform output cloud_run_url
+```
+
 Then:
-- SSH to the VM using the output command.
+- VM targets: SSH to the VM using the output command.
+- Cloud Run target: open the Cloud Run URL from output to confirm the service is reachable.
 - Send a Telegram message to confirm bot response.
 - (Optional) send a Slack message if Slack tokens are configured.
 
