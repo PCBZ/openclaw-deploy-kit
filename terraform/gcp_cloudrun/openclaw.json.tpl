@@ -46,9 +46,7 @@
     "entries": {
       "bonjour": { "enabled": false },
       "telegram": { "enabled": true },
-%{ if slack_enabled }
       "slack": { "enabled": true },
-%{ endif }
       "openrouter": { "enabled": true },
       "brave": {
         "enabled": true,
@@ -68,7 +66,7 @@
           "groupPolicy": "open"
         }
       }
-    }%{ if slack_enabled },
+    },
     "slack": {
       "enabled": true,
       "mode": "socket",
@@ -77,6 +75,6 @@
       "botToken": "${slack_bot_token}",
       "dmPolicy": "open",
       "groupPolicy": "open"
-    }%{ endif }
+    }
   }
 }

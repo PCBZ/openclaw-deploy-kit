@@ -15,18 +15,6 @@ variable "service_name" {
   default     = "openclaw"
 }
 
-variable "container_image" {
-  description = "Container image override. Leave empty to use GHCR proxy image via Artifact Registry remote repository."
-  type        = string
-  default     = ""
-}
-
-variable "enable_ghcr_proxy" {
-  description = "Create an Artifact Registry remote repository that proxies ghcr.io and use it as Cloud Run image source."
-  type        = bool
-  default     = true
-}
-
 variable "ghcr_remote_repository_id" {
   description = "Artifact Registry repository_id for GHCR proxy."
   type        = string
@@ -107,11 +95,9 @@ variable "telegram_owner_id" {
 variable "slack_app_token" {
   description = "Slack App-Level Token (xapp-...)"
   sensitive   = true
-  default     = ""
 }
 
 variable "slack_bot_token" {
   description = "Slack Bot OAuth Token (xoxb-...)"
   sensitive   = true
-  default     = ""
 }
