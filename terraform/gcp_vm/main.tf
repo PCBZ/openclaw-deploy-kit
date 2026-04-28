@@ -115,7 +115,14 @@ resource "google_compute_instance" "main" {
   }
 
   metadata = {
-    ssh-keys = local.ssh_key_entry
+    ssh-keys               = local.ssh_key_entry
+    block-project-ssh-keys = "true"
+  }
+
+  shielded_instance_config {
+    enable_secure_boot          = true
+    enable_vtpm                 = true
+    enable_integrity_monitoring = true
   }
 
   metadata_startup_script = templatefile("${path.module}/bootstrap.sh", local.bootstrap_vars)
