@@ -13,9 +13,6 @@ service_name  = "openclaw"
 min_instances = 1
 max_instances = 3
 
-# Leave container_image empty to use GHCR proxy in Artifact Registry
-container_image = ""
-enable_ghcr_proxy = true
 ghcr_remote_repository_id = "ghcr-remote"
 ghcr_image_path = "openclaw/openclaw"
 ghcr_image_tag  = "latest"
