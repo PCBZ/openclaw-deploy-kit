@@ -83,36 +83,37 @@ variable "openclaw_memory_limit_mb" {
 }
 
 variable "openrouter_api_key" {
+  type      = string
   sensitive = true
 }
 
 variable "telegram_bot_token" {
+  type      = string
   sensitive = true
 }
 
 variable "openclaw_gateway_token" {
+  type      = string
   sensitive = true
 }
 
 variable "brave_api_key" {
   description = "Brave Search API key (optional)"
+  type        = string
   sensitive   = true
-  default     = ""
-}
-
-variable "telegram_owner_id" {
-  description = "Telegram numeric user ID for privileged commands"
   default     = ""
 }
 
 variable "slack_app_token" {
   description = "Slack App-Level Token (xapp-...)"
+  type        = string
   sensitive   = true
   default     = ""
 }
 
 variable "slack_bot_token" {
   description = "Slack Bot OAuth Token (xoxb-...)"
+  type        = string
   sensitive   = true
   default     = ""
 }
