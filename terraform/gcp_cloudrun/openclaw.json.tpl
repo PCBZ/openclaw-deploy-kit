@@ -40,7 +40,7 @@
       "search": { "enabled": true, "provider": "brave" },
       "fetch": { "enabled": true }
     },
-    "deny": ["browser"]
+    "deny": ["browser", "apply_patch"]
   },
   "plugins": {
     "entries": {
