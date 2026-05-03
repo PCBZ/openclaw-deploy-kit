@@ -54,6 +54,11 @@
       }
     }
   },
+  "messages": {
+    "groupChat": {
+      "visibleReplies": "automatic"
+    }
+  },
   "channels": {
     "telegram": {
       "enabled": true,
