@@ -14,24 +14,75 @@ resource "google_cloud_run_v2_service" "openclaw" {
     }
 
     containers {
+      name  = "rclone-sync"
+      image = "rclone/rclone:latest"
+
+      command = ["/bin/sh", "-c"]
+      args    = [file("${path.module}/rclone-sync.sh")]
+
+      volume_mounts {
+        name       = "openclaw-runtime"
+        mount_path = "/data"
+      }
+
+      env {
+        name  = "RCLONE_CONFIG_R2_TYPE"
+        value = "s3"
+      }
+      env {
+        name  = "RCLONE_CONFIG_R2_PROVIDER"
+        value = "Cloudflare"
+      }
+      env {
+        name  = "RCLONE_CONFIG_R2_ENDPOINT"
+        value = "https://${var.cloudflare_account_id}.r2.cloudflarestorage.com"
+      }
+      env {
+        name  = "R2_BUCKET"
+        value = cloudflare_r2_bucket.state.name
+      }
+
+      env {
+        name = "RCLONE_CONFIG_R2_ACCESS_KEY_ID"
+        value_source {
+          secret_key_ref {
+            secret  = google_secret_manager_secret.r2_access_key_id.secret_id
+            version = "latest"
+          }
+        }
+      }
+
+      env {
+        name = "RCLONE_CONFIG_R2_SECRET_ACCESS_KEY"
+        value_source {
+          secret_key_ref {
+            secret  = google_secret_manager_secret.r2_secret_access_key.secret_id
+            version = "latest"
+          }
+        }
+      }
+
+      # tcp_socket probe on port 8081 — signals readiness after initial R2 restore
+      startup_probe {
+        tcp_socket {
+          port = 8081
+        }
+        initial_delay_seconds = 5
+        period_seconds        = 5
+        timeout_seconds       = 3
+        failure_threshold     = 60
+      }
+    }
+
+    containers {
+      name       = "openclaw"
+      depends_on = ["rclone-sync"]
       image = local.effective_container_image
       command = ["/bin/sh"]
       args    = ["-lc", "openclaw gateway run --bind lan --port \"$${PORT:-8080}\" --allow-unconfigured"]
 
       ports {
         container_port = 8080
-      }
-
-      # First boot may stage plugin runtime deps on the mounted GCS volume.
-      # Give startup probe enough budget to avoid false negatives.
-      startup_probe {
-        initial_delay_seconds = 5
-        period_seconds        = 10
-        timeout_seconds       = 5
-        failure_threshold     = 60
-        tcp_socket {
-          port = 8080
-        }
       }
 
       resources {
@@ -43,8 +94,8 @@ resource "google_cloud_run_v2_service" "openclaw" {
       }
 
       volume_mounts {
-        name       = "openclaw-state"
-        mount_path = "/mnt/openclaw-persist"
+        name       = "openclaw-runtime"
+        mount_path = "/tmp/openclaw-state"
       }
 
       env {
@@ -59,7 +110,7 @@ resource "google_cloud_run_v2_service" "openclaw" {
 
       env {
         name  = "OPENCLAW_CONFIG_PATH"
-        value = "/mnt/openclaw-persist/openclaw.json"
+        value = "/tmp/openclaw-state/openclaw.json"
       }
 
       env {
@@ -137,18 +188,17 @@ resource "google_cloud_run_v2_service" "openclaw" {
     }
 
     volumes {
-      name = "openclaw-state"
-      gcs {
-        bucket    = google_storage_bucket.state.name
-        read_only = true
-      }
+      name = "openclaw-runtime"
+      empty_dir {}
     }
+
   }
 
   depends_on = [
     google_artifact_registry_repository_iam_member.ghcr_remote_reader,
-    google_storage_bucket_object.openclaw_json,
-    google_storage_bucket_iam_member.state_rw,
-    google_project_iam_member.secret_accessor
+    null_resource.openclaw_json_r2,
+    google_project_iam_member.secret_accessor,
+    google_secret_manager_secret_version.r2_access_key_id,
+    google_secret_manager_secret_version.r2_secret_access_key,
   ]
 }
