@@ -52,11 +52,6 @@ variable "gcp_credentials_json" {
   default     = ""
 }
 
-variable "bucket_name" {
-  description = "GCS bucket name for persistent OpenClaw state"
-  type        = string
-}
-
 variable "min_instances" {
   description = "Cloud Run minimum instances"
   type        = number
@@ -100,4 +95,34 @@ variable "slack_app_token" {
 variable "slack_bot_token" {
   description = "Slack Bot OAuth Token (xoxb-...)"
   sensitive   = true
+}
+
+# ── Cloudflare R2 ─────────────────────────────────────────────
+variable "cloudflare_account_id" {
+  description = "Cloudflare Account ID (visible on Dashboard sidebar)"
+  type        = string
+}
+
+variable "cloudflare_api_token" {
+  description = "Cloudflare API Token with R2:Edit permission (for Terraform to create bucket)"
+  type        = string
+  sensitive   = true
+}
+
+variable "r2_access_key_id" {
+  description = "R2 S3-compatible Access Key ID (from R2 → Manage R2 API Tokens)"
+  type        = string
+  sensitive   = true
+}
+
+variable "r2_secret_access_key" {
+  description = "R2 S3-compatible Secret Access Key"
+  type        = string
+  sensitive   = true
+}
+
+variable "r2_bucket_name" {
+  description = "R2 bucket name for OpenClaw state persistence"
+  type        = string
+  default     = "openclaw-state"
 }

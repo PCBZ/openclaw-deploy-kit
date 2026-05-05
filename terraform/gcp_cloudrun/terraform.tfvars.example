@@ -17,5 +17,12 @@ ghcr_remote_repository_id = "ghcr-remote"
 ghcr_image_path = "openclaw/openclaw"
 ghcr_image_tag  = "latest"
 
-# ── Persistent State ─────────────────────────────────────────
-bucket_name = "your-gcp-project-id-openclaw-state"
+# ── Cloudflare R2 (persistent memory + config) ───────────────
+# Account ID: Cloudflare Dashboard → sidebar
+cloudflare_account_id = "your-cloudflare-account-id"
+# API Token: profile/api-tokens → R2:Edit
+cloudflare_api_token  = "your-cloudflare-api-token"
+# R2 S3 credentials: R2 → Manage R2 API Tokens → Create Account API token
+r2_access_key_id      = "your-r2-access-key-id"
+r2_secret_access_key  = "your-r2-secret-access-key"
+r2_bucket_name        = "openclaw-state"
