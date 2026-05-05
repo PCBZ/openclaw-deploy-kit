@@ -12,13 +12,16 @@ echo "rclone: initial restore complete"
 # ── Final sync on shutdown (SIGTERM) ─────────────────────────
 cleanup() {
   echo "rclone: final sync on shutdown..."
-  rclone sync /data/ r2:$R2_BUCKET/ --create-empty-src-dirs 2>/dev/null || true
+  # Use copy (not sync) to avoid deleting files written by other instances
+  rclone copy /data/ r2:$R2_BUCKET/ 2>/dev/null || true
   exit 0
 }
 trap cleanup TERM INT
 
 # ── Periodic sync every 60s ───────────────────────────────────
+# Use copy (not sync): sync is destructive and would delete remote files
+# written by concurrent instances when max_instances > 1.
 while true; do
   sleep 60
-  rclone sync /data/ r2:$R2_BUCKET/ --create-empty-src-dirs 2>/dev/null || true
+  rclone copy /data/ r2:$R2_BUCKET/ 2>/dev/null || true
 done
