@@ -100,7 +100,7 @@ resource "google_cloud_run_v2_service" "openclaw" {
 
       env {
         name  = "HOME"
-        value = "/home/node"
+        value = "/tmp/openclaw-state"
       }
 
       env {
