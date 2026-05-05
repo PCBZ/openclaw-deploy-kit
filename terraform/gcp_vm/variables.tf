@@ -82,6 +82,12 @@ variable "openclaw_memory_limit_mb" {
   default     = 800
 }
 
+variable "telegram_owner_id" {
+  description = "Telegram numeric user ID for privileged commands e.g. /model (optional)"
+  type        = string
+  default     = ""
+}
+
 variable "openrouter_api_key" {
   type      = string
   sensitive = true

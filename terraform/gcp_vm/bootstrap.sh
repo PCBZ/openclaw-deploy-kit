@@ -68,15 +68,21 @@ fi
 cat > /root/.openclaw/.env << 'ENVEOF'
 OPENROUTER_API_KEY=${openrouter_api_key}
 TELEGRAM_BOT_TOKEN=${telegram_bot_token}
+TELEGRAM_OWNER_ID=${telegram_owner_id}
 OPENCLAW_GATEWAY_TOKEN=${openclaw_gateway_token}
 BRAVE_API_KEY=${brave_api_key}
+SLACK_APP_TOKEN=${slack_app_token}
+SLACK_BOT_TOKEN=${slack_bot_token}
 OPENCLAW_ONBOARD_NON_INTERACTIVE=1
 ENVEOF
 
 export OPENROUTER_API_KEY=${openrouter_api_key}
 export TELEGRAM_BOT_TOKEN=${telegram_bot_token}
+export TELEGRAM_OWNER_ID=${telegram_owner_id}
 export OPENCLAW_GATEWAY_TOKEN=${openclaw_gateway_token}
 export BRAVE_API_KEY=${brave_api_key}
+export SLACK_APP_TOKEN=${slack_app_token}
+export SLACK_BOT_TOKEN=${slack_bot_token}
 
 # ── 5. Onboard ───────────────────────────────────────────────
 openclaw doctor --fix || true
