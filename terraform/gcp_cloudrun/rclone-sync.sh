@@ -3,6 +3,9 @@ set -e
 
 # ── Restore from R2 on startup ────────────────────────────────
 rclone sync r2:$R2_BUCKET/ /data/ --create-empty-src-dirs 2>/dev/null || true
+# Fix permissions: rclone runs as root, openclaw runs as node (uid 1000).
+# Make all restored files/dirs world-writable so openclaw can write to them.
+chmod -R a+rwX /data/ 2>/dev/null || true
 touch /tmp/rclone-ready
 echo "rclone: initial restore complete"
 
