@@ -71,3 +71,27 @@ resource "google_secret_manager_secret_version" "slack_bot_token" {
   secret      = google_secret_manager_secret.slack_bot_token.id
   secret_data = var.slack_bot_token
 }
+
+resource "google_secret_manager_secret" "r2_access_key_id" {
+  secret_id = "${var.service_name}-r2-access-key-id"
+  replication {
+    auto {}
+  }
+}
+
+resource "google_secret_manager_secret_version" "r2_access_key_id" {
+  secret      = google_secret_manager_secret.r2_access_key_id.id
+  secret_data = var.r2_access_key_id
+}
+
+resource "google_secret_manager_secret" "r2_secret_access_key" {
+  secret_id = "${var.service_name}-r2-secret-access-key"
+  replication {
+    auto {}
+  }
+}
+
+resource "google_secret_manager_secret_version" "r2_secret_access_key" {
+  secret      = google_secret_manager_secret.r2_secret_access_key.id
+  secret_data = var.r2_secret_access_key
+}
