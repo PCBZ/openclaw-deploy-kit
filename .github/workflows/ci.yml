@@ -1,0 +1,80 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  hcl-lint:
+    name: HCL Lint (TFLint)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup TFLint
+        uses: terraform-linters/setup-tflint@v4
+
+      - name: Run TFLint recursively
+        run: |
+          set -euo pipefail
+          cd terraform
+          tflint --init
+          tflint --recursive
+
+  bash-lint:
+    name: Bash Lint (ShellCheck)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install ShellCheck
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y shellcheck
+
+      - name: Run ShellCheck on shell scripts and .envrc
+        run: |
+          set -euo pipefail
+          mapfile -d '' shell_files < <(find . -type f \( -name "*.sh" -o -name "*.bash" \) -not -path "./.git/*" -print0)
+          mapfile -d '' envrc_files < <(find . -type f -name ".envrc" -not -path "./.git/*" -print0)
+
+          if [ "${#shell_files[@]}" -gt 0 ]; then
+            shellcheck -x -S error "${shell_files[@]}"
+          fi
+
+          if [ "${#envrc_files[@]}" -gt 0 ]; then
+            shellcheck -s bash -S error "${envrc_files[@]}"
+          fi
+
+          if [ "${#shell_files[@]}" -eq 0 ] && [ "${#envrc_files[@]}" -eq 0 ]; then
+            echo "No shell files or .envrc found."
+          fi
+
+  python-lint:
+    name: Python Lint (Ruff)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Install Ruff
+        run: python -m pip install --upgrade ruff
+
+      - name: Run Ruff
+        run: |
+          set -euo pipefail
+          ruff check .

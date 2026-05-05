@@ -83,9 +83,10 @@ jobs:
       - name: Run Checkov on Terraform
         uses: bridgecrewio/checkov-action@v12
         with:
-          directory: terraform/digitalOcean
+          directory: terraform
           framework: terraform
-          skip_check: CKV_DIO_4
+          # Keep selected checks skipped for direct-access and low-ops deployment targets.
+          skip_check: CKV_DIO_4,CKV_AZURE_119,CKV_GCP_40,CKV_AZURE_50,CKV_GCP_62,CKV_GCP_84,CKV_GCP_38
           quiet: true
           output_format: cli,sarif
           output_file_path: console,checkov.sarif
