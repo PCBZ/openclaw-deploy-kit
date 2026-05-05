@@ -3,7 +3,15 @@ resource "cloudflare_r2_bucket" "state" {
   name       = var.r2_bucket_name
 }
 
+# Write openclaw.json to a local temp file (sensitive: content won't appear in
+# Terraform plan/apply output or process listings).
+resource "local_sensitive_file" "openclaw_json" {
+  content  = local.openclaw_json_content
+  filename = "${path.module}/.terraform/tmp/openclaw.json"
+}
+
 # Upload openclaw.json to R2 via aws CLI (S3-compatible endpoint).
+# Reads from the temp file — no secrets are passed as command-line arguments.
 # Requires: awscli installed locally.
 # rclone-sync sidecar restores it into the container on each startup.
 resource "null_resource" "openclaw_json_r2" {
@@ -13,8 +21,7 @@ resource "null_resource" "openclaw_json_r2" {
 
   provisioner "local-exec" {
     command = <<-EOT
-      echo '${replace(local.openclaw_json_content, "'", "'\\''")}' | \
-      aws s3 cp - \
+      aws s3 cp "${local_sensitive_file.openclaw_json.filename}" \
         "s3://${cloudflare_r2_bucket.state.name}/openclaw.json" \
         --endpoint-url "https://${var.cloudflare_account_id}.r2.cloudflarestorage.com" \
         --content-type "application/json"
@@ -26,5 +33,5 @@ resource "null_resource" "openclaw_json_r2" {
     }
   }
 
-  depends_on = [cloudflare_r2_bucket.state]
+  depends_on = [cloudflare_r2_bucket.state, local_sensitive_file.openclaw_json]
 }
