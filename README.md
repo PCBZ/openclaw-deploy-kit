@@ -6,7 +6,8 @@
 [![Terraform](https://img.shields.io/badge/Terraform-%3E%3D1.5-844fba?logo=terraform&logoColor=white)](https://www.terraform.io)
 [![DigitalOcean](https://img.shields.io/badge/DigitalOcean-Droplet-0080ff?logo=digitalocean&logoColor=white)](https://www.digitalocean.com)
 [![Azure](https://img.shields.io/badge/Azure-VM-0078d4?logo=microsoft-azure&logoColor=white)](https://azure.microsoft.com)
-[![GCP](https://img.shields.io/badge/GCP-ComputeEngine-4285F4?logo=googlecloud&logoColor=white)](https://cloud.google.com/compute)
+[![GCP](https://img.shields.io/badge/GCP-Cloud%20Run%20%2B%20Compute%20Engine-4285F4?logo=googlecloud&logoColor=white)](https://cloud.google.com)
+[![Cloudflare R2](https://img.shields.io/badge/Cloudflare-R2%20Persistent%20Memory-f38020?logo=cloudflare&logoColor=white)](https://developers.cloudflare.com/r2/)
 [![OpenRouter](https://img.shields.io/badge/OpenRouter-Free%20Tier-ff6b35?logoColor=white)](https://openrouter.ai)
 [![OpenClaw](https://img.shields.io/badge/OpenClaw-2026-00e5cc?logoColor=white)](https://openclaw.bot)
 [![Telegram](https://img.shields.io/badge/Telegram-Bot-26a5e4?logo=telegram&logoColor=white)](https://telegram.org)
@@ -19,21 +20,23 @@ One-command deployment of an [OpenClaw](https://openclaw.bot) AI agent on Digita
 - Telegram bot with DM and group chat support
 - Slack bot support (Socket Mode)
 - Web search via Brave Search (falls back to DuckDuckGo)
-- 8 switchable free LLM models via `/model <alias>`
-- Secrets managed via `.env` — never committed
+- 15+ switchable LLM models via `/model <alias>` (GPT-4o, Claude, Gemini, Llama, DeepSeek, and more)
+- **GCP Cloud Run**: persistent memory across container restarts via Cloudflare R2 (rclone sidecar syncs every 60s)
+- Secrets managed via `.env` + direnv — never committed
 
 ## Prerequisites
 
 - Terraform >= 1.5
 - direnv (`brew install direnv`)
-- SSH key pair
+- SSH key pair (for VM targets)
 - DigitalOcean account + API token (for DO path)
 - Azure subscription + service principal credentials (for Azure path)
 - GCP project (for GCP VM or GCP Cloud Run path)
+- Cloudflare account + R2 credentials (for GCP Cloud Run path only)
 - OpenRouter API key
 - Telegram bot token (from [@BotFather](https://t.me/BotFather))
-- Slack App-Level token (starts with `xapp-`)
-- Slack Bot User OAuth token (starts with `xoxb-`)
+- Slack App-Level token (starts with `xapp-`) — optional
+- Slack Bot User OAuth token (starts with `xoxb-`) — optional
 
 ## Setup
 
@@ -52,8 +55,12 @@ Edit `.env` and fill in your values:
 | `OPENCLAW_GATEWAY_TOKEN` | Any strong random string |
 | `BRAVE_API_KEY` | From [api.search.brave.com](https://api.search.brave.com) — optional, falls back to DuckDuckGo |
 | `TELEGRAM_OWNER_ID` | Your Telegram user ID from [@userinfobot](https://t.me/userinfobot) — grants `/model` and other privileged commands |
-| `SLACK_APP_TOKEN` | Slack App-Level token (starts with `xapp-`) |
-| `SLACK_BOT_TOKEN` | Slack Bot User OAuth token (starts with `xoxb-`) |
+| `SLACK_APP_TOKEN` | Slack App-Level token (starts with `xapp-`) — leave empty to disable Slack |
+| `SLACK_BOT_TOKEN` | Slack Bot User OAuth token (starts with `xoxb-`) — leave empty to disable Slack |
+| `CF_ACCOUNT_ID` | Cloudflare Account ID — **Cloud Run only** |
+| `CF_API_TOKEN` | Cloudflare API Token with R2:Edit permission — **Cloud Run only** |
+| `R2_ACCESS_KEY_ID` | R2 S3-compatible Access Key ID — **Cloud Run only** |
+| `R2_SECRET_ACCESS_KEY` | R2 S3-compatible Secret Access Key — **Cloud Run only** |
 
 ### 2. Choose deployment target
 
@@ -144,13 +151,16 @@ openclaw_memory_limit_mb = 800
 ```
 
 GCP VM deployment in this repo uses:
-- Compute Engine VM (default `e2-micro`)
-- 30GB boot disk
-- optional swap + systemd memory cap for OpenClaw process
-- firewall rules for SSH (`22`) and OpenClaw gateway (`18789`)
+- Compute Engine VM (default `e2-micro`, Always Free eligible)
+- 30 GB boot disk
+- Swap file + systemd memory cap for OpenClaw process
+- Firewall rules for SSH (`22`) and OpenClaw gateway (`18789`)
+- Shielded VM (Secure Boot + vTPM + Integrity Monitoring)
 
 
 #### <span style="font-size:1.15em;font-weight:bold;">Cloud Run</span>
+
+[![Cloudflare R2](https://img.shields.io/badge/Cloudflare-R2%20Persistent%20Memory-f38020?logo=cloudflare&logoColor=white)](https://developers.cloudflare.com/r2/)
 
 ```bash
 cd terraform/gcp_cloudrun
@@ -171,14 +181,24 @@ ghcr_remote_repository_id = "ghcr-remote"
 ghcr_image_path = "openclaw/openclaw"
 ghcr_image_tag  = "latest"
 
-bucket_name = "your-gcp-project-id-openclaw-state"
+# Cloudflare R2 — persistent memory across container restarts
+cloudflare_account_id = "your-cloudflare-account-id"
+cloudflare_api_token  = "your-cloudflare-api-token"
+r2_access_key_id      = "your-r2-access-key-id"
+r2_secret_access_key  = "your-r2-secret-access-key"
+r2_bucket_name        = "openclaw-state"
 ```
+
+> **Cloudflare R2 credentials** — two separate tokens are needed:
+> - `cloudflare_api_token`: [dash.cloudflare.com/profile/api-tokens](https://dash.cloudflare.com/profile/api-tokens) → Create Token → **R2:Edit** (used by Terraform to create the bucket)
+> - `r2_access_key_id` + `r2_secret_access_key`: Cloudflare Dashboard → R2 → **Manage R2 API Tokens** → Create Account API Token (used by rclone at runtime)
 
 GCP Cloud Run deployment in this repo uses:
 - Cloud Run service (managed runtime, no VM SSH needed)
 - Artifact Registry remote repo proxy for GHCR images
-- Secret Manager for runtime secrets
-- GCS bucket for persistent state
+- Secret Manager for all runtime secrets
+- **Cloudflare R2** for persistent state (session history, memory, soul files) — synced every 60s via rclone sidecar
+- Multi-container setup: `openclaw` + `rclone-sync` sidecar sharing an emptyDir volume
 
 ### 3. Load secrets via direnv
 
@@ -219,9 +239,20 @@ Then:
 
 ## Switching Models
 
-In Telegram, use `/model <alias>`:
+In Telegram or Slack, use `/model <alias>`. Available aliases:
 
-All models are free tier on OpenRouter (rate limits apply).
+| Alias | Model |
+|---|---|
+| `opus` | Claude Opus 4 |
+| `sonnet` | Claude Sonnet 4 |
+| `haiku` | Claude Haiku 4 |
+| `gpt4o` | GPT-4o |
+| `mini` | GPT-4o mini |
+| `gemini-pro` | Gemini 2.5 Pro |
+| `flash` | Gemini 2.5 Flash |
+| `r1` | DeepSeek R1 |
+| `llama` | Llama 3.3 70B (free) |
+| `auto` | OpenRouter auto-select |
 
 ## Security Notes
 
@@ -233,3 +264,4 @@ gateway_allowed_cidrs = ["203.0.113.10/32"]
 ```
 
 - CI security checks are defined in [.github/workflows/security.yml](.github/workflows/security.yml) (ShellCheck, .envrc policy, Checkov, Gitleaks).
+- Secrets are never written to Terraform state — all sensitive variables are injected at runtime via Secret Manager (Cloud Run) or `.env` + direnv.
