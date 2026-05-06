@@ -39,7 +39,7 @@ resource "google_cloud_run_v2_service" "openclaw" {
       }
       env {
         name  = "R2_BUCKET"
-        value = cloudflare_r2_bucket.state.name
+        value = var.r2_bucket_name
       }
 
       env {
@@ -100,7 +100,7 @@ resource "google_cloud_run_v2_service" "openclaw" {
 
       env {
         name  = "HOME"
-        value = "/tmp/openclaw-state"
+        value = "/home/node"
       }
 
       env {

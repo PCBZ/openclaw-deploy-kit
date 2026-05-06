@@ -44,7 +44,30 @@ curl -fsSL https://openclaw.bot/install.sh | bash -s -- --install-method npm --n
 npm install -g grammy @grammyjs/runner @grammyjs/transformer-throttler \
   @slack/bolt @slack/socket-mode @slack/web-api
 
-# ── 3. Write config ──────────────────────────────────────────
+# ── 3. Install rclone + restore from R2 ─────────────────────
+%{ if r2_bucket_name != "" ~}
+curl https://rclone.org/install.sh | bash
+
+mkdir -p /root/.config/rclone
+cat > /root/.config/rclone/rclone.conf << 'RCLONEEOF'
+[r2]
+type = s3
+provider = Cloudflare
+access_key_id = ${r2_access_key_id}
+secret_access_key = ${r2_secret_access_key}
+endpoint = https://${cloudflare_account_id}.r2.cloudflarestorage.com
+RCLONEEOF
+
+echo "Restoring OpenClaw state from R2 (${r2_bucket_name})..."
+# Exclude openclaw.json: each platform maintains its own config so the same
+# R2 bucket can be shared between Cloud Run and Compute Engine for failover.
+rclone sync r2:${r2_bucket_name}/ /root/.openclaw/ --create-empty-src-dirs \
+  --exclude "openclaw.json" --exclude "openclaw.json.bak" 2>/dev/null || true
+chmod -R a+rX /root/.openclaw/ 2>/dev/null || true
+echo "R2 restore complete"
+%{ endif ~}
+
+# ── 4. Write config ──────────────────────────────────────────
 mkdir -p /root/.openclaw
 
 # Write injected openclaw.json (provided by Terraform)
@@ -68,15 +91,22 @@ fi
 cat > /root/.openclaw/.env << 'ENVEOF'
 OPENROUTER_API_KEY=${openrouter_api_key}
 TELEGRAM_BOT_TOKEN=${telegram_bot_token}
+TELEGRAM_OWNER_ID=${telegram_owner_id}
 OPENCLAW_GATEWAY_TOKEN=${openclaw_gateway_token}
 BRAVE_API_KEY=${brave_api_key}
+SLACK_APP_TOKEN=${slack_app_token}
+SLACK_BOT_TOKEN=${slack_bot_token}
 OPENCLAW_ONBOARD_NON_INTERACTIVE=1
 ENVEOF
+chmod 600 /root/.openclaw/.env
 
 export OPENROUTER_API_KEY=${openrouter_api_key}
 export TELEGRAM_BOT_TOKEN=${telegram_bot_token}
+export TELEGRAM_OWNER_ID=${telegram_owner_id}
 export OPENCLAW_GATEWAY_TOKEN=${openclaw_gateway_token}
 export BRAVE_API_KEY=${brave_api_key}
+export SLACK_APP_TOKEN=${slack_app_token}
+export SLACK_BOT_TOKEN=${slack_bot_token}
 
 # ── 5. Onboard ───────────────────────────────────────────────
 openclaw doctor --fix || true
@@ -120,7 +150,50 @@ OVERRIDEEOF
 systemctl --user daemon-reload
 systemctl --user restart openclaw-gateway.service
 
-# ── 7. Auto-approve operator.approvals scope ─────────────────
+# ── 7. Setup R2 periodic sync ────────────────────────────────
+%{ if r2_bucket_name != "" ~}
+# Periodic sync service: copies /root/.openclaw → R2 every 60s
+cat > /etc/systemd/system/openclaw-r2-sync.service << 'R2SYNCEOF'
+[Unit]
+Description=OpenClaw R2 state periodic sync
+After=network.target
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=5
+ExecStart=/bin/sh -c 'while true; do rclone copy /root/.openclaw/ r2:${r2_bucket_name}/ --create-empty-src-dirs --exclude "openclaw.json" --exclude "openclaw.json.bak" 2>/dev/null; sleep 60; done'
+
+[Install]
+WantedBy=multi-user.target
+R2SYNCEOF
+
+# Final sync on shutdown: ensures no state is lost on VM stop/reboot
+cat > /etc/systemd/system/openclaw-r2-final.service << 'R2FINALEOF'
+[Unit]
+Description=OpenClaw R2 final sync on shutdown
+DefaultDependencies=no
+Before=shutdown.target reboot.target halt.target
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/rclone copy /root/.openclaw/ r2:${r2_bucket_name}/ --create-empty-src-dirs --exclude "openclaw.json" --exclude "openclaw.json.bak"
+TimeoutStartSec=30
+RemainAfterExit=yes
+
+[Install]
+WantedBy=halt.target reboot.target shutdown.target
+R2FINALEOF
+
+systemctl daemon-reload
+systemctl enable openclaw-r2-sync.service
+systemctl start openclaw-r2-sync.service
+systemctl enable openclaw-r2-final.service
+echo "R2 sync configured: r2:${r2_bucket_name} (60s interval + shutdown hook)"
+%{ endif ~}
+
+# ── 8. Auto-approve operator.approvals scope ─────────────────
 echo "Waiting for approval requests..."
 sleep 120
 
@@ -178,5 +251,8 @@ LOGROTATEEOF
 echo "=== GCP Bootstrap Complete ==="
 echo "Swap: $${swap_size_gb}GB at $${swap_path}"
 echo "Memory Limit: ${openclaw_memory_limit_mb}MB (systemd cgroup)"
+%{ if r2_bucket_name != "" ~}
+echo "R2 Persistence: r2:${r2_bucket_name} (60s sync + shutdown hook)"
+%{ endif ~}
 echo "OpenClaw Web: http://localhost:18789/health (test locally)"
 echo "Check systemd: systemctl --user status openclaw-gateway"

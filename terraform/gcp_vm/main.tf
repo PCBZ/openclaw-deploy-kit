@@ -17,7 +17,7 @@ locals {
     if length(regexall(":", cidr)) > 0
   ]
 
-  openclaw_json_content = templatefile("${path.module}/openclaw.json.tpl", {
+  openclaw_json_content = templatefile("${path.module}/../shared/openclaw.json.tpl", {
     openclaw_gateway_token = var.openclaw_gateway_token
     openrouter_api_key     = var.openrouter_api_key
     brave_api_key          = var.brave_api_key
@@ -25,17 +25,27 @@ locals {
     slack_app_token        = var.slack_app_token
     slack_bot_token        = var.slack_bot_token
     slack_enabled          = var.slack_app_token != "" && var.slack_bot_token != ""
+    bonjour_enabled        = false  # VM: no bonjour plugin needed
+    use_plugin_load_paths  = true   # VM: load extensions from npm global path
+    telegram_owner_id      = var.telegram_owner_id
   })
 
   bootstrap_vars = {
     openrouter_api_key       = var.openrouter_api_key
     telegram_bot_token       = var.telegram_bot_token
+    telegram_owner_id        = var.telegram_owner_id
     openclaw_gateway_token   = var.openclaw_gateway_token
     brave_api_key            = var.brave_api_key
+    slack_app_token          = var.slack_app_token
+    slack_bot_token          = var.slack_bot_token
     swap_size                = var.swap_size
     openclaw_memory_limit_mb = var.openclaw_memory_limit_mb
     approve_operator_script  = file("${path.module}/approve_operator_approvals.py")
     openclaw_json_content    = local.openclaw_json_content
+    cloudflare_account_id    = var.cloudflare_account_id
+    r2_access_key_id         = var.r2_access_key_id
+    r2_secret_access_key     = var.r2_secret_access_key
+    r2_bucket_name           = var.r2_bucket_name
   }
 }
 
