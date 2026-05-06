@@ -74,6 +74,12 @@ variable "telegram_bot_token" {
   sensitive = true
 }
 
+variable "telegram_owner_id" {
+  description = "Telegram numeric user ID for owner-only DM access. Leave empty for open DMs."
+  type        = string
+  default     = ""
+}
+
 variable "openclaw_gateway_token" {
   type      = string
   sensitive = true

@@ -27,6 +27,7 @@ locals {
     slack_enabled          = var.slack_app_token != "" && var.slack_bot_token != ""
     bonjour_enabled        = false  # VM: no bonjour plugin needed
     use_plugin_load_paths  = true   # VM: load extensions from npm global path
+    telegram_owner_id      = var.telegram_owner_id
   })
 
   bootstrap_vars = {

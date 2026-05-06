@@ -98,6 +98,7 @@ SLACK_APP_TOKEN=${slack_app_token}
 SLACK_BOT_TOKEN=${slack_bot_token}
 OPENCLAW_ONBOARD_NON_INTERACTIVE=1
 ENVEOF
+chmod 600 /root/.openclaw/.env
 
 export OPENROUTER_API_KEY=${openrouter_api_key}
 export TELEGRAM_BOT_TOKEN=${telegram_bot_token}

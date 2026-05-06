@@ -11,6 +11,7 @@ locals {
     slack_enabled          = true   # Cloud Run always provisions Slack secrets
     bonjour_enabled        = true   # Cloud Run: disable bonjour discovery
     use_plugin_load_paths  = false  # Cloud Run: extensions bundled in container image
+    telegram_owner_id      = var.telegram_owner_id
   })
 }
 
