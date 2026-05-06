@@ -1,8 +1,8 @@
 # OpenClaw on DigitalOcean + Azure + GCP
 
-[![Security Checks](https://github.com/PCBZ/OpenClaw_openclaw-deploy-kit/actions/workflows/security.yml/badge.svg)](https://github.com/PCBZ/OpenClaw_openclaw-deploy-kit/actions/workflows/security.yml)
+[![Security Checks](https://github.com/PCBZ/openclaw-deploy-kit/actions/workflows/security.yml/badge.svg)](https://github.com/PCBZ/openclaw-deploy-kit/actions/workflows/security.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Last Commit](https://img.shields.io/github/last-commit/PCBZ/OpenClaw_openclaw-deploy-kit)](https://github.com/PCBZ/OpenClaw_openclaw-deploy-kit/commits/main)
+[![Last Commit](https://img.shields.io/github/last-commit/PCBZ/openclaw-deploy-kit)](https://github.com/PCBZ/openclaw-deploy-kit/commits/main)
 [![Terraform](https://img.shields.io/badge/Terraform-%3E%3D1.5-844fba?logo=terraform&logoColor=white)](https://www.terraform.io)
 [![DigitalOcean](https://img.shields.io/badge/DigitalOcean-Droplet-0080ff?logo=digitalocean&logoColor=white)](https://www.digitalocean.com)
 [![Azure](https://img.shields.io/badge/Azure-VM-0078d4?logo=microsoft-azure&logoColor=white)](https://azure.microsoft.com)
