@@ -61,7 +61,7 @@ RCLONEEOF
 echo "Restoring OpenClaw state from R2 (${r2_bucket_name})..."
 # Exclude openclaw.json: each platform maintains its own config so the same
 # R2 bucket can be shared between Cloud Run and Compute Engine for failover.
-rclone sync r2:${r2_bucket_name}/ /root/.openclaw/ --create-empty-src-dirs \
+rclone sync r2:${r2_bucket_name}/.openclaw/ /root/.openclaw/ --create-empty-src-dirs \
   --exclude "openclaw.json" --exclude "openclaw.json.bak" 2>/dev/null || true
 chmod -R a+rX /root/.openclaw/ 2>/dev/null || true
 echo "R2 restore complete"
@@ -162,7 +162,7 @@ After=network.target
 Type=simple
 Restart=always
 RestartSec=5
-ExecStart=/bin/sh -c 'while true; do rclone copy /root/.openclaw/ r2:${r2_bucket_name}/ --create-empty-src-dirs --exclude "openclaw.json" --exclude "openclaw.json.bak" 2>/dev/null; sleep 60; done'
+ExecStart=/bin/sh -c 'while true; do rclone copy /root/.openclaw/ r2:${r2_bucket_name}/.openclaw/ --create-empty-src-dirs --exclude "openclaw.json" --exclude "openclaw.json.bak" 2>/dev/null; sleep 60; done'
 
 [Install]
 WantedBy=multi-user.target
@@ -178,7 +178,7 @@ After=network.target
 
 [Service]
 Type=oneshot
-ExecStart=/usr/bin/rclone copy /root/.openclaw/ r2:${r2_bucket_name}/ --create-empty-src-dirs --exclude "openclaw.json" --exclude "openclaw.json.bak"
+ExecStart=/usr/bin/rclone copy /root/.openclaw/ r2:${r2_bucket_name}/.openclaw/ --create-empty-src-dirs --exclude "openclaw.json" --exclude "openclaw.json.bak"
 TimeoutStartSec=30
 RemainAfterExit=yes
 
