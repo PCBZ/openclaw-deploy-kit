@@ -82,6 +82,12 @@ variable "openclaw_memory_limit_mb" {
   default     = 800
 }
 
+variable "telegram_owner_id" {
+  description = "Telegram numeric user ID for privileged commands e.g. /model (optional)"
+  type        = string
+  default     = ""
+}
+
 variable "openrouter_api_key" {
   type      = string
   sensitive = true
@@ -115,5 +121,32 @@ variable "slack_bot_token" {
   description = "Slack Bot OAuth Token (xoxb-...)"
   type        = string
   sensitive   = true
+  default     = ""
+}
+
+# ── Cloudflare R2 (optional persistent memory) ──────────────
+variable "cloudflare_account_id" {
+  description = "Cloudflare Account ID (for R2 persistence). Leave empty to disable R2."
+  type        = string
+  default     = ""
+}
+
+variable "r2_access_key_id" {
+  description = "R2 S3-compatible Access Key ID. Leave empty to disable R2."
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "r2_secret_access_key" {
+  description = "R2 S3-compatible Secret Access Key. Leave empty to disable R2."
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "r2_bucket_name" {
+  description = "R2 bucket name for OpenClaw state persistence. Leave empty to disable R2."
+  type        = string
   default     = ""
 }

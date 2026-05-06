@@ -74,6 +74,12 @@ variable "telegram_bot_token" {
   sensitive = true
 }
 
+variable "telegram_owner_id" {
+  description = "Telegram numeric user ID for owner-only DM access. Leave empty for open DMs."
+  type        = string
+  default     = ""
+}
+
 variable "openclaw_gateway_token" {
   type      = string
   sensitive = true
@@ -102,12 +108,6 @@ variable "slack_bot_token" {
 variable "cloudflare_account_id" {
   description = "Cloudflare Account ID (visible on Dashboard sidebar)"
   type        = string
-}
-
-variable "cloudflare_api_token" {
-  description = "Cloudflare API Token with R2:Edit permission (for Terraform to create bucket)"
-  type        = string
-  sensitive   = true
 }
 
 variable "r2_access_key_id" {

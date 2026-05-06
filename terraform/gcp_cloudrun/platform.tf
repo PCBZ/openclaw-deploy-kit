@@ -1,13 +1,17 @@
 locals {
   effective_container_image = "${var.region}-docker.pkg.dev/${var.project_id}/${var.ghcr_remote_repository_id}/${var.ghcr_image_path}:${var.ghcr_image_tag}"
 
-  openclaw_json_content = templatefile("${path.module}/openclaw.json.tpl", {
+  openclaw_json_content = templatefile("${path.module}/../shared/openclaw.json.tpl", {
     openclaw_gateway_token = var.openclaw_gateway_token
     openrouter_api_key     = var.openrouter_api_key
     brave_api_key          = var.brave_api_key
     telegram_bot_token     = var.telegram_bot_token
     slack_app_token        = var.slack_app_token
     slack_bot_token        = var.slack_bot_token
+    slack_enabled          = true   # Cloud Run always provisions Slack secrets
+    bonjour_enabled        = true   # Cloud Run: disable bonjour discovery
+    use_plugin_load_paths  = false  # Cloud Run: extensions bundled in container image
+    telegram_owner_id      = var.telegram_owner_id
   })
 }
 
