@@ -123,3 +123,30 @@ variable "slack_bot_token" {
   sensitive   = true
   default     = ""
 }
+
+# ── Cloudflare R2 (optional persistent memory) ──────────────
+variable "cloudflare_account_id" {
+  description = "Cloudflare Account ID (for R2 persistence). Leave empty to disable R2."
+  type        = string
+  default     = ""
+}
+
+variable "r2_access_key_id" {
+  description = "R2 S3-compatible Access Key ID. Leave empty to disable R2."
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "r2_secret_access_key" {
+  description = "R2 S3-compatible Secret Access Key. Leave empty to disable R2."
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "r2_bucket_name" {
+  description = "R2 bucket name for OpenClaw state persistence. Leave empty to disable R2."
+  type        = string
+  default     = ""
+}

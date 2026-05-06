@@ -39,3 +39,12 @@ openclaw_memory_limit_mb = 800   # e2-micro: 800MB; e2-small: 1800MB
 # telegram_owner_id = ""   # Numeric Telegram user ID → grants /model and admin commands
 # slack_app_token   = ""   # xapp-... Socket Mode token (leave empty to disable Slack)
 # slack_bot_token   = ""   # xoxb-... Bot OAuth token
+
+# ── Cloudflare R2 (optional persistent memory) ──────────────
+# Leave all empty to run without R2. When set, soul/memory/sessions survive VM reboots.
+# Account ID: Cloudflare Dashboard → right sidebar
+# cloudflare_account_id = "your-cloudflare-account-id"
+# R2 S3 credentials: R2 → Manage R2 API Tokens → Create Account API Token
+# r2_access_key_id      = "your-r2-access-key-id"
+# r2_secret_access_key  = "your-r2-secret-access-key"
+# r2_bucket_name        = "openclaw-state-vm"

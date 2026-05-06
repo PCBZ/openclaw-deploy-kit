@@ -47,10 +47,22 @@
     "deny": ["browser", "apply_patch"]
   },
   "plugins": {
+%{ if use_plugin_load_paths ~}
+    "load": {
+      "paths": [
+        "/usr/lib/node_modules/openclaw/dist/extensions/telegram"%{ if slack_enabled },
+        "/usr/lib/node_modules/openclaw/dist/extensions/slack"%{ endif }
+      ]
+    },
+%{ endif ~}
     "entries": {
+%{ if bonjour_enabled ~}
       "bonjour": { "enabled": false },
+%{ endif ~}
       "telegram": { "enabled": true },
+%{ if slack_enabled ~}
       "slack": { "enabled": true },
+%{ endif ~}
       "openrouter": { "enabled": true },
       "brave": {
         "enabled": true,
@@ -75,7 +87,7 @@
           "groupPolicy": "open"
         }
       }
-    },
+    }%{ if slack_enabled },
     "slack": {
       "enabled": true,
       "mode": "socket",
@@ -84,6 +96,6 @@
       "botToken": "${slack_bot_token}",
       "dmPolicy": "open",
       "groupPolicy": "open"
-    }
+    }%{ endif }
   }
 }
