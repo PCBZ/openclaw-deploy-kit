@@ -104,12 +104,6 @@ variable "cloudflare_account_id" {
   type        = string
 }
 
-variable "cloudflare_api_token" {
-  description = "Cloudflare API Token with R2:Edit permission (for Terraform to create bucket)"
-  type        = string
-  sensitive   = true
-}
-
 variable "r2_access_key_id" {
   description = "R2 S3-compatible Access Key ID (from R2 → Manage R2 API Tokens)"
   type        = string
