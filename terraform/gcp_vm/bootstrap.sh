@@ -59,12 +59,17 @@ endpoint = https://${cloudflare_account_id}.r2.cloudflarestorage.com
 RCLONEEOF
 
 echo "Restoring OpenClaw state from R2 (${r2_bucket_name})..."
-# Exclude openclaw.json: each platform maintains its own config so the same
-# R2 bucket can be shared between Cloud Run and Compute Engine for failover.
+# Filter file avoids shell glob expansion of ** patterns.
+cat > /etc/rclone-openclaw-filter.txt << 'FILTEREOF'
++ workspace/MEMORY.md
++ workspace/SOUL.md
++ workspace/USER.md
++ workspace/AGENTS.md
++ agents/main/sessions/**
+- *
+FILTEREOF
 rclone sync r2:${r2_bucket_name}/ /root/.openclaw/ --create-empty-src-dirs \
-  --include "workspace/MEMORY.md" --include "workspace/SOUL.md" \
-  --include "workspace/USER.md" --include "workspace/AGENTS.md" \
-  --include "agents/main/sessions/**" 2>/dev/null || true
+  --filter-from /etc/rclone-openclaw-filter.txt 2>/dev/null || true
 chmod -R a+rX /root/.openclaw/ 2>/dev/null || true
 echo "R2 restore complete"
 %{ endif ~}
@@ -164,7 +169,7 @@ After=network.target
 Type=simple
 Restart=always
 RestartSec=5
-ExecStart=/bin/sh -c 'while true; do rclone copy /root/.openclaw/ r2:${r2_bucket_name}/ --create-empty-src-dirs --include "/workspace/MEMORY.md" --include "/workspace/SOUL.md" --include "/workspace/USER.md" --include "/workspace/AGENTS.md" --include "/agents/main/sessions/**" --exclude "*" 2>/dev/null; sleep 60; done'
+ExecStart=/bin/sh -c 'while true; do rclone copy /root/.openclaw/ r2:${r2_bucket_name}/ --create-empty-src-dirs --filter-from /etc/rclone-openclaw-filter.txt 2>/dev/null; sleep 60; done'
 
 [Install]
 WantedBy=multi-user.target
@@ -180,7 +185,7 @@ After=network.target
 
 [Service]
 Type=oneshot
-ExecStart=/usr/bin/rclone copy /root/.openclaw/ r2:${r2_bucket_name}/ --create-empty-src-dirs --include "/workspace/MEMORY.md" --include "/workspace/SOUL.md" --include "/workspace/USER.md" --include "/workspace/AGENTS.md" --include "/agents/main/sessions/**" --exclude "*"
+ExecStart=/usr/bin/rclone copy /root/.openclaw/ r2:${r2_bucket_name}/ --create-empty-src-dirs --filter-from /etc/rclone-openclaw-filter.txt
 TimeoutStartSec=30
 RemainAfterExit=yes
 
