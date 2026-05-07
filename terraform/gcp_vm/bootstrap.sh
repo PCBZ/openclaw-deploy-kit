@@ -64,7 +64,7 @@ echo "Restoring OpenClaw state from R2 (${r2_bucket_name})..."
 rclone sync r2:${r2_bucket_name}/ /root/.openclaw/ --create-empty-src-dirs \
   --include "/workspace/MEMORY.md" --include "/workspace/SOUL.md" \
   --include "/workspace/USER.md" --include "/workspace/AGENTS.md" \
-  --include "/credentials/telegram-allowFrom.json" --include "/agents/main/sessions/**" \
+  --include "/agents/main/sessions/**" \
   --exclude "*" 2>/dev/null || true
 chmod -R a+rX /root/.openclaw/ 2>/dev/null || true
 echo "R2 restore complete"
@@ -165,7 +165,7 @@ After=network.target
 Type=simple
 Restart=always
 RestartSec=5
-ExecStart=/bin/sh -c 'while true; do rclone copy /root/.openclaw/ r2:${r2_bucket_name}/ --create-empty-src-dirs --include "/workspace/MEMORY.md" --include "/workspace/SOUL.md" --include "/workspace/USER.md" --include "/workspace/AGENTS.md" --include "/credentials/telegram-allowFrom.json" --include "/agents/main/sessions/**" --exclude "*" 2>/dev/null; sleep 60; done'
+ExecStart=/bin/sh -c 'while true; do rclone copy /root/.openclaw/ r2:${r2_bucket_name}/ --create-empty-src-dirs --include "/workspace/MEMORY.md" --include "/workspace/SOUL.md" --include "/workspace/USER.md" --include "/workspace/AGENTS.md" --include "/agents/main/sessions/**" --exclude "*" 2>/dev/null; sleep 60; done'
 
 [Install]
 WantedBy=multi-user.target
@@ -181,7 +181,7 @@ After=network.target
 
 [Service]
 Type=oneshot
-ExecStart=/usr/bin/rclone copy /root/.openclaw/ r2:${r2_bucket_name}/ --create-empty-src-dirs --include "/workspace/MEMORY.md" --include "/workspace/SOUL.md" --include "/workspace/USER.md" --include "/workspace/AGENTS.md" --include "/credentials/telegram-allowFrom.json" --include "/agents/main/sessions/**" --exclude "*"
+ExecStart=/usr/bin/rclone copy /root/.openclaw/ r2:${r2_bucket_name}/ --create-empty-src-dirs --include "/workspace/MEMORY.md" --include "/workspace/SOUL.md" --include "/workspace/USER.md" --include "/workspace/AGENTS.md" --include "/agents/main/sessions/**" --exclude "*"
 TimeoutStartSec=30
 RemainAfterExit=yes
 

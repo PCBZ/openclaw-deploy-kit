@@ -1,10 +1,9 @@
 #!/bin/sh
 set -e
 
-# Whitelist: only sync memory-related files that should be shared across platforms.
-# Runtime config (models.json, auth-profiles.json, openclaw.json) is platform-specific
-# and must NOT be shared — each platform writes its own on startup.
-RCLONE_FILTER="--include /workspace/MEMORY.md --include /workspace/SOUL.md --include /workspace/USER.md --include /workspace/AGENTS.md --include /credentials/telegram-allowFrom.json --include /agents/main/sessions/** --exclude *"
+# Whitelist: only sync memory files shared across platforms.
+# Config (openclaw.json, auth) is injected via Secret Manager, never stored in R2.
+RCLONE_FILTER="--include /workspace/MEMORY.md --include /workspace/SOUL.md --include /workspace/USER.md --include /workspace/AGENTS.md --include /agents/main/sessions/** --exclude *"
 
 # ── Restore from R2 on startup ────────────────────────────────
 rclone sync r2:$R2_BUCKET/ /data/ --create-empty-src-dirs $RCLONE_FILTER 2>/dev/null || true
