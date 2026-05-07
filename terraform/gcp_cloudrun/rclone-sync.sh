@@ -3,7 +3,7 @@ set -e
 
 # Whitelist: only sync memory files shared across platforms.
 # Config (openclaw.json, auth) is injected via Secret Manager, never stored in R2.
-RCLONE_FILTER="--include /workspace/MEMORY.md --include /workspace/SOUL.md --include /workspace/USER.md --include /workspace/AGENTS.md --include /agents/main/sessions/** --exclude *"
+RCLONE_FILTER="--include workspace/MEMORY.md --include workspace/SOUL.md --include workspace/USER.md --include workspace/AGENTS.md --include agents/main/sessions/**"
 
 # ── Restore from R2 on startup ────────────────────────────────
 rclone sync r2:$R2_BUCKET/ /data/ --create-empty-src-dirs $RCLONE_FILTER 2>/dev/null || true

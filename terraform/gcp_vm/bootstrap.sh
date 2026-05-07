@@ -62,10 +62,9 @@ echo "Restoring OpenClaw state from R2 (${r2_bucket_name})..."
 # Exclude openclaw.json: each platform maintains its own config so the same
 # R2 bucket can be shared between Cloud Run and Compute Engine for failover.
 rclone sync r2:${r2_bucket_name}/ /root/.openclaw/ --create-empty-src-dirs \
-  --include "/workspace/MEMORY.md" --include "/workspace/SOUL.md" \
-  --include "/workspace/USER.md" --include "/workspace/AGENTS.md" \
-  --include "/agents/main/sessions/**" \
-  --exclude "*" 2>/dev/null || true
+  --include "workspace/MEMORY.md" --include "workspace/SOUL.md" \
+  --include "workspace/USER.md" --include "workspace/AGENTS.md" \
+  --include "agents/main/sessions/**" 2>/dev/null || true
 chmod -R a+rX /root/.openclaw/ 2>/dev/null || true
 echo "R2 restore complete"
 %{ endif ~}

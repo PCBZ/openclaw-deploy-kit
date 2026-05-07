@@ -79,7 +79,7 @@ resource "google_cloud_run_v2_service" "openclaw" {
       depends_on = ["rclone-sync"]
       image = local.effective_container_image
       command = ["/bin/sh"]
-      args    = ["-lc", "mkdir -p /tmp/openclaw-state/agents/main/agent /tmp/openclaw-state/credentials; [ -n \"$OPENCLAW_JSON\" ] && echo \"$OPENCLAW_JSON\" > /tmp/openclaw-state/openclaw.json; [ -n \"$TELEGRAM_ALLOW_FROM\" ] && echo \"$TELEGRAM_ALLOW_FROM\" > /tmp/openclaw-state/credentials/telegram-allowFrom.json; printf '{\"openrouter\":{\"apiKey\":\"%s\"}}' \"$OPENROUTER_API_KEY\" > /tmp/openclaw-state/agents/main/agent/auth-profiles.json; printf '{\"providers\":{\"openrouter\":{\"baseUrl\":\"https://openrouter.ai/api/v1\",\"api\":\"openai-completions\",\"apiKey\":\"OPENROUTER_API_KEY\"}}}' > /tmp/openclaw-state/agents/main/agent/models.json; exec openclaw gateway run --bind lan --port \"$${PORT:-8080}\" --allow-unconfigured"]
+      args    = ["-lc", "mkdir -p /home/node/.openclaw/agents/main/agent /home/node/.openclaw/credentials; [ -n \"$OPENCLAW_JSON\" ] && echo \"$OPENCLAW_JSON\" > /home/node/.openclaw/openclaw.json; [ -n \"$TELEGRAM_ALLOW_FROM\" ] && echo \"$TELEGRAM_ALLOW_FROM\" > /home/node/.openclaw/credentials/telegram-allowFrom.json; printf '{\"openrouter\":{\"apiKey\":\"%s\"}}' \"$OPENROUTER_API_KEY\" > /home/node/.openclaw/agents/main/agent/auth-profiles.json; printf '{\"providers\":{\"openrouter\":{\"baseUrl\":\"https://openrouter.ai/api/v1\",\"api\":\"openai-completions\",\"apiKey\":\"OPENROUTER_API_KEY\"}}}' > /home/node/.openclaw/agents/main/agent/models.json; exec openclaw gateway run --bind lan --port \"$${PORT:-8080}\" --allow-unconfigured"]
 
       ports {
         container_port = 8080
@@ -95,7 +95,7 @@ resource "google_cloud_run_v2_service" "openclaw" {
 
       volume_mounts {
         name       = "openclaw-runtime"
-        mount_path = "/tmp/openclaw-state"
+        mount_path = "/home/node/.openclaw"
       }
 
       env {
@@ -105,12 +105,12 @@ resource "google_cloud_run_v2_service" "openclaw" {
 
       env {
         name  = "OPENCLAW_STATE_DIR"
-        value = "/tmp/openclaw-state"
+        value = "/home/node/.openclaw"
       }
 
       env {
         name  = "OPENCLAW_CONFIG_PATH"
-        value = "/tmp/openclaw-state/openclaw.json"
+        value = "/home/node/.openclaw/openclaw.json"
       }
 
       env {
