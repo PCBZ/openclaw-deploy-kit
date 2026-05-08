@@ -99,7 +99,6 @@ resource "google_secret_manager_secret_version" "telegram_allow_from" {
 }
 
 resource "google_secret_manager_secret" "qq_app_id" {
-  count     = var.qq_app_id != "" ? 1 : 0
   secret_id = "${var.service_name}-qq-app-id"
   replication {
     auto {}
@@ -107,13 +106,11 @@ resource "google_secret_manager_secret" "qq_app_id" {
 }
 
 resource "google_secret_manager_secret_version" "qq_app_id" {
-  count       = var.qq_app_id != "" ? 1 : 0
-  secret      = google_secret_manager_secret.qq_app_id[0].id
+  secret      = google_secret_manager_secret.qq_app_id.id
   secret_data = var.qq_app_id
 }
 
 resource "google_secret_manager_secret" "qq_client_secret" {
-  count     = var.qq_client_secret != "" ? 1 : 0
   secret_id = "${var.service_name}-qq-client-secret"
   replication {
     auto {}
@@ -121,8 +118,7 @@ resource "google_secret_manager_secret" "qq_client_secret" {
 }
 
 resource "google_secret_manager_secret_version" "qq_client_secret" {
-  count       = var.qq_client_secret != "" ? 1 : 0
-  secret      = google_secret_manager_secret.qq_client_secret[0].id
+  secret      = google_secret_manager_secret.qq_client_secret.id
   secret_data = var.qq_client_secret
 }
 

@@ -124,19 +124,17 @@ variable "slack_bot_token" {
   default     = ""
 }
 
-# ── QQ Bot (optional) ─────────────────────────────────────────
+# ── QQ Bot ────────────────────────────────────────────────────
 variable "qq_app_id" {
-  description = "QQ Bot App ID from QQ Open Platform (q.qq.com). Leave empty to disable QQ."
+  description = "QQ Bot App ID from QQ Open Platform (q.qq.com)"
   type        = string
   sensitive   = true
-  default     = ""
 }
 
 variable "qq_client_secret" {
-  description = "QQ Bot Client Secret. Leave empty to disable QQ."
+  description = "QQ Bot Client Secret"
   type        = string
   sensitive   = true
-  default     = ""
 }
 
 variable "qq_owner_id" {

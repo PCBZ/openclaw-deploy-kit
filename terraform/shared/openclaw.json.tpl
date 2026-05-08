@@ -69,9 +69,7 @@
 %{ if slack_enabled ~}
       "slack": { "enabled": true },
 %{ endif ~}
-%{ if qq_enabled ~}
       "qqbot": { "enabled": true },
-%{ endif ~}
       "openrouter": { "enabled": true },
       "brave": {
         "enabled": true,
@@ -108,13 +106,13 @@
       "botToken": "${slack_bot_token}",
       "dmPolicy": "open",
       "groupPolicy": "open"
-    }%{ endif }%{ if qq_enabled },
+    }%{ endif },
     "qqbot": {
       "enabled": true,
       "appId": "${qq_app_id}",
       "clientSecret": "${qq_client_secret}",
       "allowFrom": [%{ if qq_owner_id != "" ~}"${qq_owner_id}"%{ else ~}"*"%{ endif ~}],
       "groupPolicy": "open"
-    }%{ endif }
+    }
   }
 }

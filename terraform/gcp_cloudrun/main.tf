@@ -79,7 +79,7 @@ resource "google_cloud_run_v2_service" "openclaw" {
       depends_on = ["rclone-sync"]
       image = local.effective_container_image
       command = ["/bin/sh"]
-      args    = ["-lc", "mkdir -p /home/node/.openclaw/agents/main/agent /home/node/.openclaw/credentials; [ -n \"$OPENCLAW_JSON\" ] && echo \"$OPENCLAW_JSON\" > /home/node/.openclaw/openclaw.json; [ -n \"$TELEGRAM_ALLOW_FROM\" ] && echo \"$TELEGRAM_ALLOW_FROM\" > /home/node/.openclaw/credentials/telegram-allowFrom.json; printf '{\"openrouter\":{\"apiKey\":\"%s\"}}' \"$OPENROUTER_API_KEY\" > /home/node/.openclaw/agents/main/agent/auth-profiles.json; printf '{\"providers\":{\"openrouter\":{\"baseUrl\":\"https://openrouter.ai/api/v1\",\"api\":\"openai-completions\",\"apiKey\":\"OPENROUTER_API_KEY\"}}}' > /home/node/.openclaw/agents/main/agent/models.json; ${local.qq_plugin_install}exec openclaw gateway run --bind lan --port \"$${PORT:-8080}\" --allow-unconfigured"]
+      args    = ["-lc", "mkdir -p /home/node/.openclaw/agents/main/agent /home/node/.openclaw/credentials; [ -n \"$OPENCLAW_JSON\" ] && printf '%s' \"$OPENCLAW_JSON\" > /home/node/.openclaw/openclaw.json; [ -n \"$TELEGRAM_ALLOW_FROM\" ] && printf '%s' \"$TELEGRAM_ALLOW_FROM\" > /home/node/.openclaw/credentials/telegram-allowFrom.json; printf '{\"openrouter\":{\"apiKey\":\"%s\"}}' \"$OPENROUTER_API_KEY\" > /home/node/.openclaw/agents/main/agent/auth-profiles.json; printf '{\"providers\":{\"openrouter\":{\"baseUrl\":\"https://openrouter.ai/api/v1\",\"api\":\"openai-completions\",\"apiKey\":\"%s\"}}}' \"$OPENROUTER_API_KEY\" > /home/node/.openclaw/agents/main/agent/models.json; openclaw plugins install @openclaw/qqbot; exec openclaw gateway run --bind lan --port \"$${PORT:-8080}\" --allow-unconfigured"]
 
       ports {
         container_port = 8080
@@ -209,28 +209,22 @@ resource "google_cloud_run_v2_service" "openclaw" {
         }
       }
 
-      dynamic "env" {
-        for_each = local.qq_enabled ? [1] : []
-        content {
-          name = "QQBOT_APP_ID"
-          value_source {
-            secret_key_ref {
-              secret  = google_secret_manager_secret.qq_app_id[0].secret_id
-              version = "latest"
-            }
+      env {
+        name = "QQBOT_APP_ID"
+        value_source {
+          secret_key_ref {
+            secret  = google_secret_manager_secret.qq_app_id.secret_id
+            version = "latest"
           }
         }
       }
 
-      dynamic "env" {
-        for_each = local.qq_enabled ? [1] : []
-        content {
-          name = "QQBOT_CLIENT_SECRET"
-          value_source {
-            secret_key_ref {
-              secret  = google_secret_manager_secret.qq_client_secret[0].secret_id
-              version = "latest"
-            }
+      env {
+        name = "QQBOT_CLIENT_SECRET"
+        value_source {
+          secret_key_ref {
+            secret  = google_secret_manager_secret.qq_client_secret.secret_id
+            version = "latest"
           }
         }
       }

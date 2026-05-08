@@ -44,9 +44,7 @@ curl -fsSL https://openclaw.bot/install.sh | bash -s -- --install-method npm --n
 npm install -g grammy @grammyjs/runner @grammyjs/transformer-throttler \
   @slack/bolt @slack/socket-mode @slack/web-api
 
-%{ if qq_enabled ~}
 npm install -g @openclaw/qqbot
-%{ endif ~}
 
 # ── 3. Install rclone + restore from R2 ─────────────────────
 %{ if r2_bucket_name != "" ~}
