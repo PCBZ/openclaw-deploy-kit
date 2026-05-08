@@ -104,6 +104,27 @@ variable "slack_bot_token" {
   sensitive   = true
 }
 
+# ── QQ Bot ────────────────────────────────────────────────────
+variable "qq_app_id" {
+  description = "QQ Bot App ID from QQ Open Platform (q.qq.com). Leave empty to disable QQ."
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "qq_client_secret" {
+  description = "QQ Bot Client Secret. Leave empty to disable QQ."
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "qq_owner_id" {
+  description = "QQ OpenID of bot owner for DM allowlist. Leave empty to allow all DMs."
+  type        = string
+  default     = ""
+}
+
 # ── Cloudflare R2 ─────────────────────────────────────────────
 variable "cloudflare_account_id" {
   description = "Cloudflare Account ID (visible on Dashboard sidebar)"

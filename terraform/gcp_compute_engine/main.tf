@@ -17,6 +17,9 @@ locals {
     if length(regexall(":", cidr)) > 0
   ]
 
+  qq_enabled     = var.qq_app_id != "" && var.qq_client_secret != ""
+  qq_plugin_path = local.qq_enabled ? "/usr/lib/node_modules/@openclaw/qqbot" : ""
+
   openclaw_json_content = templatefile("${path.module}/../shared/openclaw.json.tpl", {
     openclaw_gateway_token = var.openclaw_gateway_token
     openrouter_api_key     = var.openrouter_api_key
@@ -28,6 +31,11 @@ locals {
     bonjour_enabled        = false  # VM: no bonjour plugin needed
     use_plugin_load_paths  = true   # VM: load extensions from npm global path
     telegram_owner_id      = var.telegram_owner_id
+    qq_app_id              = var.qq_app_id
+    qq_client_secret       = var.qq_client_secret
+    qq_owner_id            = var.qq_owner_id
+    qq_enabled             = local.qq_enabled
+    qq_plugin_path         = local.qq_plugin_path
   })
 
   bootstrap_vars = {
@@ -38,6 +46,11 @@ locals {
     brave_api_key            = var.brave_api_key
     slack_app_token          = var.slack_app_token
     slack_bot_token          = var.slack_bot_token
+    qq_app_id                = var.qq_app_id
+    qq_client_secret         = var.qq_client_secret
+    qq_owner_id              = var.qq_owner_id
+    qq_enabled               = local.qq_enabled
+    qq_plugin_path           = local.qq_plugin_path
     swap_size                = var.swap_size
     openclaw_memory_limit_mb = var.openclaw_memory_limit_mb
     approve_operator_script  = file("${path.module}/approve_operator_approvals.py")
