@@ -2,7 +2,7 @@
 set -e
 
 apt-get update -y
-apt-get install -y curl ca-certificates libatomic1
+apt-get install -y curl ca-certificates libatomic1 openssl
 
 mkdir -p /opt/opend
 cd /opt/opend
@@ -14,12 +14,25 @@ chmod +x FutuOpenD
 
 mkdir -p /root/.com.futunn.FutuOpenD/F3CNN
 
-# Write RSA private key as PKCS#1 (FutuOpenD -rsa_private_key requires -----BEGIN RSA PRIVATE KEY-----)
-# tls_private_key generates PKCS#8; convert using openssl rsa (always outputs PKCS#1 traditional format)
-cat > /root/futu-rsa-private.pem << RSAEOF
-${futu_rsa_private_key}
-RSAEOF
-openssl rsa -in /root/futu-rsa-private.pem -out /root/futu-rsa-private.pem 2>/dev/null || true
+# Fetch RSA private key from Secret Manager (never embedded in metadata)
+gcloud secrets versions access latest \
+  --secret="${rsa_secret_name}" \
+  --project="${project_id}" \
+  > /root/futu-rsa-raw.pem
+
+if [ ! -s /root/futu-rsa-raw.pem ]; then
+  echo "ERROR: Failed to fetch RSA private key from Secret Manager" >&2
+  exit 1
+fi
+
+# Convert PKCS#8 to PKCS#1 (FutuOpenD -rsa_private_key requires -----BEGIN RSA PRIVATE KEY-----)
+openssl rsa -in /root/futu-rsa-raw.pem -out /root/futu-rsa-private.pem 2>&1
+rm -f /root/futu-rsa-raw.pem
+
+if ! grep -q "BEGIN RSA PRIVATE KEY" /root/futu-rsa-private.pem; then
+  echo "ERROR: RSA key conversion to PKCS#1 failed" >&2
+  exit 1
+fi
 chmod 600 /root/futu-rsa-private.pem
 
 cat > /etc/systemd/system/futu-opend.service << 'SVCEOF'

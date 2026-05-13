@@ -38,7 +38,7 @@ curl -LsSf https://astral.sh/uv/install.sh \
 UV=/home/node/.local/bin/uv
 $UV python install 3.11
 $UV venv /home/node/.futu-venv --python 3.11
-$UV pip install futu-api --python /home/node/.futu-venv/bin/python
+$UV pip install futu-api cryptography --python /home/node/.futu-venv/bin/python
 printf '#!/bin/sh\nexec /home/node/.futu-venv/bin/python "$@"\n' > /home/node/.local/bin/python
 printf '#!/bin/sh\nexec /home/node/.futu-venv/bin/python "$@"\n' > /home/node/.local/bin/python3
 chmod +x /home/node/.local/bin/python /home/node/.local/bin/python3
@@ -61,8 +61,11 @@ sys.stdout.buffer.write(key.private_bytes(
     format=serialization.PrivateFormat.TraditionalOpenSSL,
     encryption_algorithm=serialization.NoEncryption()
 ))
-" > /home/node/.openclaw/credentials/futu-rsa-private.pem 2>/dev/null || \
-    printf '%s' "$FUTU_RSA_PRIVATE_KEY" > /home/node/.openclaw/credentials/futu-rsa-private.pem
+" > /home/node/.openclaw/credentials/futu-rsa-private.pem
+  if ! grep -q "BEGIN RSA PRIVATE KEY" /home/node/.openclaw/credentials/futu-rsa-private.pem 2>/dev/null; then
+    echo "ERROR: RSA key conversion to PKCS#1 failed - futu SDK requires -----BEGIN RSA PRIVATE KEY-----" >&2
+    exit 1
+  fi
   chmod 600 /home/node/.openclaw/credentials/futu-rsa-private.pem
 fi
 

@@ -77,12 +77,18 @@ resource "google_compute_instance" "futu_opend" {
     access_config {}
   }
 
+  service_account {
+    email  = google_service_account.futu_opend.email
+    scopes = ["cloud-platform"]
+  }
+
   metadata = {
     block-project-ssh-keys = "true"
     startup-script = templatefile("${path.module}/futu-opend-startup.sh", {
-      futu_account         = var.futu_account
-      futu_password_md5    = var.futu_password_md5
-      futu_rsa_private_key = tls_private_key.futu_rsa.private_key_pem
+      futu_account        = var.futu_account
+      futu_password_md5   = var.futu_password_md5
+      rsa_secret_name     = google_secret_manager_secret.futu_rsa_private_key.secret_id
+      project_id          = var.project_id
     })
   }
 
@@ -92,7 +98,13 @@ resource "google_compute_instance" "futu_opend" {
     enable_integrity_monitoring = true
   }
 
-  depends_on = [google_project_service.required]
+  allow_stopping_for_update = true
+
+  depends_on = [
+    google_project_service.required,
+    google_secret_manager_secret_iam_member.futu_opend_rsa_key,
+    google_secret_manager_secret_version.futu_rsa_private_key,
+  ]
 }
 
 resource "google_compute_firewall" "futu_opend_api" {
