@@ -13,15 +13,12 @@ resource "google_cloud_run_v2_service" "openclaw" {
       max_instance_count = var.max_instances
     }
 
-    dynamic "vpc_access" {
-      for_each = local.futu_enabled ? [1] : []
-      content {
-        network_interfaces {
-          network    = "default"
-          subnetwork = "default"
-        }
-        egress = "PRIVATE_RANGES_ONLY"
+    vpc_access {
+      network_interfaces {
+        network    = "default"
+        subnetwork = "default"
       }
+      egress = "PRIVATE_RANGES_ONLY"
     }
 
     containers {
@@ -220,23 +217,17 @@ resource "google_cloud_run_v2_service" "openclaw" {
         }
       }
 
-      dynamic "env" {
-        for_each = local.futu_enabled ? [1] : []
-        content {
-          name  = "FUTU_OPEND_HOST"
-          value = google_compute_instance.futu_opend[0].network_interface[0].network_ip
-        }
+      env {
+        name  = "FUTU_OPEND_HOST"
+        value = google_compute_instance.futu_opend.network_interface[0].network_ip
       }
 
-      dynamic "env" {
-        for_each = local.futu_enabled ? [1] : []
-        content {
-          name = "FUTU_RSA_PRIVATE_KEY"
-          value_source {
-            secret_key_ref {
-              secret  = google_secret_manager_secret.futu_rsa_private_key[0].secret_id
-              version = "latest"
-            }
+      env {
+        name = "FUTU_RSA_PRIVATE_KEY"
+        value_source {
+          secret_key_ref {
+            secret  = google_secret_manager_secret.futu_rsa_private_key.secret_id
+            version = "latest"
           }
         }
       }

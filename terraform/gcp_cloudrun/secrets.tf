@@ -99,7 +99,6 @@ resource "google_secret_manager_secret_version" "telegram_allow_from" {
 }
 
 resource "google_secret_manager_secret" "futu_rsa_private_key" {
-  count     = local.futu_enabled ? 1 : 0
   secret_id = "${var.service_name}-futu-rsa-private-key"
   replication {
     auto {}
@@ -107,9 +106,8 @@ resource "google_secret_manager_secret" "futu_rsa_private_key" {
 }
 
 resource "google_secret_manager_secret_version" "futu_rsa_private_key" {
-  count       = local.futu_enabled ? 1 : 0
-  secret      = google_secret_manager_secret.futu_rsa_private_key[0].id
-  secret_data = tls_private_key.futu_rsa[0].private_key_pem
+  secret      = google_secret_manager_secret.futu_rsa_private_key.id
+  secret_data = tls_private_key.futu_rsa.private_key_pem
 }
 
 resource "google_secret_manager_secret" "r2_access_key_id" {

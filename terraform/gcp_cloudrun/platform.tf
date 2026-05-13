@@ -1,7 +1,6 @@
 locals {
   effective_container_image = "${var.region}-docker.pkg.dev/${var.project_id}/${var.ghcr_remote_repository_id}/${var.ghcr_image_path}:${var.ghcr_image_tag}"
-  futu_enabled              = var.futu_account != "" && var.futu_password_md5 != ""
-  futu_skills_install       = local.futu_enabled ? file("${path.module}/futu-skills-install.sh") : ""
+  futu_skills_install       = file("${path.module}/futu-skills-install.sh")
 
   openclaw_json_content = templatefile("${path.module}/../shared/openclaw.json.tpl", {
     openclaw_gateway_token = var.openclaw_gateway_token
@@ -54,13 +53,11 @@ resource "google_artifact_registry_repository" "ghcr_remote" {
 }
 
 resource "tls_private_key" "futu_rsa" {
-  count     = local.futu_enabled ? 1 : 0
   algorithm = "RSA"
   rsa_bits  = 1024
 }
 
 resource "google_compute_instance" "futu_opend" {
-  count        = local.futu_enabled ? 1 : 0
   name         = "${var.service_name}-futu-opend"
   machine_type = "e2-micro"
   zone         = "${var.region}-b"
@@ -82,9 +79,9 @@ resource "google_compute_instance" "futu_opend" {
 
   metadata = {
     startup-script = templatefile("${path.module}/futu-opend-startup.sh", {
-      futu_account       = var.futu_account
-      futu_password_md5  = var.futu_password_md5
-      futu_rsa_private_key = tls_private_key.futu_rsa[0].private_key_pem
+      futu_account         = var.futu_account
+      futu_password_md5    = var.futu_password_md5
+      futu_rsa_private_key = tls_private_key.futu_rsa.private_key_pem
     })
   }
 
@@ -92,7 +89,6 @@ resource "google_compute_instance" "futu_opend" {
 }
 
 resource "google_compute_firewall" "futu_opend_api" {
-  count   = local.futu_enabled ? 1 : 0
   name    = "${var.service_name}-futu-opend-api"
   network = "default"
   project = var.project_id
