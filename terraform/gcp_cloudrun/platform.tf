@@ -1,5 +1,7 @@
 locals {
   effective_container_image = "${var.region}-docker.pkg.dev/${var.project_id}/${var.ghcr_remote_repository_id}/${var.ghcr_image_path}:${var.ghcr_image_tag}"
+  futu_enabled              = var.futu_account != "" && var.futu_password_md5 != ""
+  futu_skills_install       = local.futu_enabled ? file("${path.module}/futu-skills-install.sh") : ""
 
   openclaw_json_content = templatefile("${path.module}/../shared/openclaw.json.tpl", {
     openclaw_gateway_token = var.openclaw_gateway_token
@@ -21,7 +23,8 @@ resource "google_project_service" "required" {
     "artifactregistry.googleapis.com",
     "secretmanager.googleapis.com",
     "iam.googleapis.com",
-    "serviceusage.googleapis.com"
+    "serviceusage.googleapis.com",
+    "compute.googleapis.com"
   ])
 
   project                    = var.project_id
@@ -48,6 +51,59 @@ resource "google_artifact_registry_repository" "ghcr_remote" {
   }
 
   depends_on = [google_project_service.required]
+}
+
+resource "tls_private_key" "futu_rsa" {
+  count     = local.futu_enabled ? 1 : 0
+  algorithm = "RSA"
+  rsa_bits  = 1024
+}
+
+resource "google_compute_instance" "futu_opend" {
+  count        = local.futu_enabled ? 1 : 0
+  name         = "${var.service_name}-futu-opend"
+  machine_type = "e2-micro"
+  zone         = "${var.region}-b"
+  project      = var.project_id
+  tags         = ["${var.service_name}-futu-opend"]
+
+  boot_disk {
+    initialize_params {
+      image = "ubuntu-os-cloud/ubuntu-2204-lts"
+      size  = 20
+      type  = "pd-balanced"
+    }
+  }
+
+  network_interface {
+    network = "default"
+    access_config {}
+  }
+
+  metadata = {
+    startup-script = templatefile("${path.module}/futu-opend-startup.sh", {
+      futu_account       = var.futu_account
+      futu_password_md5  = var.futu_password_md5
+      futu_rsa_private_key = tls_private_key.futu_rsa[0].private_key_pem
+    })
+  }
+
+  depends_on = [google_project_service.required]
+}
+
+resource "google_compute_firewall" "futu_opend_api" {
+  count   = local.futu_enabled ? 1 : 0
+  name    = "${var.service_name}-futu-opend-api"
+  network = "default"
+  project = var.project_id
+
+  allow {
+    protocol = "tcp"
+    ports    = ["11111"]
+  }
+
+  source_ranges = ["10.0.0.0/8"]
+  target_tags   = ["${var.service_name}-futu-opend"]
 }
 
 resource "google_artifact_registry_repository_iam_member" "ghcr_remote_reader" {

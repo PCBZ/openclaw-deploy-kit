@@ -13,6 +13,17 @@ resource "google_cloud_run_v2_service" "openclaw" {
       max_instance_count = var.max_instances
     }
 
+    dynamic "vpc_access" {
+      for_each = local.futu_enabled ? [1] : []
+      content {
+        network_interfaces {
+          network    = "default"
+          subnetwork = "default"
+        }
+        egress = "PRIVATE_RANGES_ONLY"
+      }
+    }
+
     containers {
       name  = "rclone-sync"
       image = "rclone/rclone:latest"
@@ -79,7 +90,7 @@ resource "google_cloud_run_v2_service" "openclaw" {
       depends_on = ["rclone-sync"]
       image = local.effective_container_image
       command = ["/bin/sh"]
-      args    = ["-lc", "mkdir -p /home/node/.openclaw/agents/main/agent /home/node/.openclaw/credentials; [ -n \"$OPENCLAW_JSON\" ] && echo \"$OPENCLAW_JSON\" > /home/node/.openclaw/openclaw.json; [ -n \"$TELEGRAM_ALLOW_FROM\" ] && echo \"$TELEGRAM_ALLOW_FROM\" > /home/node/.openclaw/credentials/telegram-allowFrom.json; printf '{\"openrouter\":{\"apiKey\":\"%s\"}}' \"$OPENROUTER_API_KEY\" > /home/node/.openclaw/agents/main/agent/auth-profiles.json; printf '{\"providers\":{\"openrouter\":{\"baseUrl\":\"https://openrouter.ai/api/v1\",\"api\":\"openai-completions\",\"apiKey\":\"OPENROUTER_API_KEY\"}}}' > /home/node/.openclaw/agents/main/agent/models.json; exec openclaw gateway run --bind lan --port \"$${PORT:-8080}\" --allow-unconfigured"]
+      args    = ["-lc", "mkdir -p /home/node/.openclaw/agents/main/agent /home/node/.openclaw/credentials; [ -n \"$OPENCLAW_JSON\" ] && printf '%s' \"$OPENCLAW_JSON\" > /home/node/.openclaw/openclaw.json; [ -n \"$TELEGRAM_ALLOW_FROM\" ] && printf '%s' \"$TELEGRAM_ALLOW_FROM\" > /home/node/.openclaw/credentials/telegram-allowFrom.json; printf '{\"openrouter\":{\"apiKey\":\"%s\"}}' \"$OPENROUTER_API_KEY\" > /home/node/.openclaw/agents/main/agent/auth-profiles.json; printf '{\"providers\":{\"openrouter\":{\"baseUrl\":\"https://openrouter.ai/api/v1\",\"api\":\"openai-completions\",\"apiKey\":\"%s\"}}}' \"$OPENROUTER_API_KEY\" > /home/node/.openclaw/agents/main/agent/models.json; ${local.futu_skills_install}exec openclaw gateway run --bind lan --port \"$${PORT:-8080}\" --allow-unconfigured"]
 
       ports {
         container_port = 8080
@@ -208,6 +219,27 @@ resource "google_cloud_run_v2_service" "openclaw" {
           }
         }
       }
+
+      dynamic "env" {
+        for_each = local.futu_enabled ? [1] : []
+        content {
+          name  = "FUTU_OPEND_HOST"
+          value = google_compute_instance.futu_opend[0].network_interface[0].network_ip
+        }
+      }
+
+      dynamic "env" {
+        for_each = local.futu_enabled ? [1] : []
+        content {
+          name = "FUTU_RSA_PRIVATE_KEY"
+          value_source {
+            secret_key_ref {
+              secret  = google_secret_manager_secret.futu_rsa_private_key[0].secret_id
+              version = "latest"
+            }
+          }
+        }
+      }
     }
 
     volumes {
@@ -224,5 +256,6 @@ resource "google_cloud_run_v2_service" "openclaw" {
     google_project_iam_member.secret_accessor,
     google_secret_manager_secret_version.r2_access_key_id,
     google_secret_manager_secret_version.r2_secret_access_key,
+    google_secret_manager_secret_version.futu_rsa_private_key,
   ]
 }

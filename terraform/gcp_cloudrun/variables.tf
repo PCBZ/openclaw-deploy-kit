@@ -104,6 +104,21 @@ variable "slack_bot_token" {
   sensitive   = true
 }
 
+# ── Futu OpenD (GCE VM) ───────────────────────────────────────
+variable "futu_account" {
+  description = "Futu/Moomoo login account (phone or email). Leave empty to disable Futu OpenD VM."
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "futu_password_md5" {
+  description = "MD5 hash of Futu login password (echo -n 'password' | md5)"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
 # ── Cloudflare R2 ─────────────────────────────────────────────
 variable "cloudflare_account_id" {
   description = "Cloudflare Account ID (visible on Dashboard sidebar)"
