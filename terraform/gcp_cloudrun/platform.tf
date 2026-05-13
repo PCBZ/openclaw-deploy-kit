@@ -78,11 +78,18 @@ resource "google_compute_instance" "futu_opend" {
   }
 
   metadata = {
+    block-project-ssh-keys = "true"
     startup-script = templatefile("${path.module}/futu-opend-startup.sh", {
       futu_account         = var.futu_account
       futu_password_md5    = var.futu_password_md5
       futu_rsa_private_key = tls_private_key.futu_rsa.private_key_pem
     })
+  }
+
+  shielded_instance_config {
+    enable_secure_boot          = true
+    enable_vtpm                 = true
+    enable_integrity_monitoring = true
   }
 
   depends_on = [google_project_service.required]
