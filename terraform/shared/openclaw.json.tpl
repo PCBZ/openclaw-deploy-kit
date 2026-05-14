@@ -113,7 +113,8 @@
           "allowFrom": ["${telegram_owner_id}"],
           "dmPolicy": "allowlist",
           "groupPolicy": "allowlist",
-          "groupAllowFrom": ["${telegram_owner_id}"]
+          "groupAllowFrom": ["${telegram_owner_id}"],
+          "groups": { "*": {} }
         }
       }
     }%{ if slack_enabled },
