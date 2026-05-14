@@ -100,12 +100,7 @@
       "accounts": {
         "default": {
           "botToken": "${telegram_bot_token}",
-%{ if telegram_owner_id != "" ~}
-          "allowFrom": ["${telegram_owner_id}"],
-          "dmPolicy": "allowlist",
-%{ else ~}
           "dmPolicy": "open",
-%{ endif ~}
           "groupPolicy": "open"
         },
         "futu": {
