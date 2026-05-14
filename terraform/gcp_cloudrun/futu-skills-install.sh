@@ -1,7 +1,10 @@
 #!/bin/sh
-mkdir -p /home/node/.openclaw/skills
+# Install futuapi ONLY into workspace-futu/skills — never into the global managed
+# skills dir (~/.openclaw/skills/).  The main agent's workspace (~/.openclaw/workspace/)
+# therefore has NO skills dir and cannot discover futuapi regardless of config filtering.
+mkdir -p /home/node/.openclaw/workspace-futu/skills
 
-if [ ! -d /home/node/.openclaw/skills/futuapi ]; then
+if [ ! -d /home/node/.openclaw/workspace-futu/skills/futuapi ]; then
   curl -fsSL https://openapi.futunn.com/skills/opend-skills.zip -o /tmp/fs.zip \
   && mkdir -p /tmp/fs-extract \
   && node -e "
@@ -26,12 +29,13 @@ if [ ! -d /home/node/.openclaw/skills/futuapi ]; then
   " \
   && cp -r /tmp/fs-extract/skills/futuapi \
            /tmp/fs-extract/skills/install-futu-opend \
-           /home/node/.openclaw/skills/ 2>/dev/null
+           /home/node/.openclaw/workspace-futu/skills/ 2>/dev/null
   rm -rf /tmp/fs.zip /tmp/fs-extract
 fi
 
-mkdir -p /home/node/.openclaw/workspace
-ln -sf /home/node/.openclaw/skills /home/node/.openclaw/workspace/skills 2>/dev/null || true
+# No workspace/skills symlink for the main agent — this is intentional.
+# The main agent's workspace (~/.openclaw/workspace/) has no skills/ directory,
+# so futuapi is physically unreachable from it.
 mkdir -p /home/node/.local/bin
 curl -LsSf https://astral.sh/uv/install.sh \
   | UV_INSTALL_DIR=/home/node/.local/bin sh
@@ -71,8 +75,8 @@ fi
 
 # Patch common.py: remove any old RSA block and append the current version
 sed -i '/^# RSA encryption for cross-network trade connections/,$d' \
-  /home/node/.openclaw/skills/futuapi/scripts/common.py 2>/dev/null || true
-cat >> /home/node/.openclaw/skills/futuapi/scripts/common.py << 'PYEOF'
+  /home/node/.openclaw/workspace-futu/skills/futuapi/scripts/common.py 2>/dev/null || true
+cat >> /home/node/.openclaw/workspace-futu/skills/futuapi/scripts/common.py << 'PYEOF'
 
 # RSA encryption for cross-network trade connections
 _futu_rsa_key_file = os.path.expanduser('~/.openclaw/credentials/futu-rsa-private.pem')

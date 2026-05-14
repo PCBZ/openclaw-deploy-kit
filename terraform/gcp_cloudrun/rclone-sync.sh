@@ -11,6 +11,11 @@ cat > "$FILTER_FILE" << 'EOF'
 + workspace/USER.md
 + workspace/AGENTS.md
 + agents/main/sessions/**
++ agents/futu/sessions/**
++ workspace-futu/MEMORY.md
++ workspace-futu/SOUL.md
++ workspace-futu/USER.md
++ workspace-futu/AGENTS.md
 - *
 EOF
 

@@ -80,6 +80,12 @@ variable "telegram_owner_id" {
   default     = ""
 }
 
+variable "futu_telegram_bot_token" {
+  description = "Telegram bot token for the Futu-dedicated bot. Only responds to telegram_owner_id."
+  type        = string
+  sensitive   = true
+}
+
 variable "openclaw_gateway_token" {
   type      = string
   sensitive = true

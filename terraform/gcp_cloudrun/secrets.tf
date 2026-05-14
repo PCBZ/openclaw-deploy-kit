@@ -34,6 +34,18 @@ resource "google_secret_manager_secret_version" "telegram_bot_token" {
   secret_data = var.telegram_bot_token
 }
 
+resource "google_secret_manager_secret" "futu_telegram_bot_token" {
+  secret_id = "${var.service_name}-futu-telegram-bot-token"
+  replication {
+    auto {}
+  }
+}
+
+resource "google_secret_manager_secret_version" "futu_telegram_bot_token" {
+  secret      = google_secret_manager_secret.futu_telegram_bot_token.id
+  secret_data = var.futu_telegram_bot_token
+}
+
 resource "google_secret_manager_secret" "gateway_token" {
   secret_id = "${var.service_name}-gateway-token"
   replication {

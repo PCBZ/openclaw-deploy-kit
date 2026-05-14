@@ -162,6 +162,16 @@ resource "google_cloud_run_v2_service" "openclaw" {
       }
 
       env {
+        name = "FUTU_TELEGRAM_BOT_TOKEN"
+        value_source {
+          secret_key_ref {
+            secret  = google_secret_manager_secret.futu_telegram_bot_token.secret_id
+            version = "latest"
+          }
+        }
+      }
+
+      env {
         name = "OPENCLAW_GATEWAY_TOKEN"
         value_source {
           secret_key_ref {
@@ -248,5 +258,6 @@ resource "google_cloud_run_v2_service" "openclaw" {
     google_secret_manager_secret_version.r2_access_key_id,
     google_secret_manager_secret_version.r2_secret_access_key,
     google_secret_manager_secret_version.futu_rsa_private_key,
+    google_secret_manager_secret_version.futu_telegram_bot_token,
   ]
 }

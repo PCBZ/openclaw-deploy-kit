@@ -6,6 +6,18 @@
     "remote": { "token": "${openclaw_gateway_token}" }
   },
   "agents": {
+    "list": [
+      {
+        "id": "main",
+        "default": true,
+        "skills": [],
+        "tools": { "allow": ["web_search", "web_fetch", "message", "cron", "tts", "image", "image_generate", "video_generate", "gateway", "session_status", "sessions_list", "sessions_history", "sessions_send", "agents_list"] }
+      },
+      {
+        "id": "futu",
+        "skills": ["futuapi", "install-futu-opend"]
+      }
+    ],
     "defaults": {
       "model": {
         "primary": "openrouter/auto"
@@ -70,6 +82,13 @@
       }
     }
   },
+  "bindings": [
+    {
+      "type": "route",
+      "agentId": "futu",
+      "match": { "channel": "telegram", "accountId": "futu" }
+    }
+  ],
   "messages": {
     "groupChat": {
       "visibleReplies": "automatic"
@@ -88,6 +107,13 @@
           "dmPolicy": "open",
 %{ endif ~}
           "groupPolicy": "open"
+        },
+        "futu": {
+          "botToken": "${futu_telegram_bot_token}",
+          "allowFrom": ["${telegram_owner_id}"],
+          "dmPolicy": "allowlist",
+          "groupPolicy": "allowlist",
+          "groupAllowFrom": ["${telegram_owner_id}"]
         }
       }
     }%{ if slack_enabled },
