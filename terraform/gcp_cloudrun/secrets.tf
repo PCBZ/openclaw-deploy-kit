@@ -96,20 +96,6 @@ resource "google_secret_manager_secret_version" "slack_bot_token" {
   secret_data = var.slack_bot_token
 }
 
-resource "google_secret_manager_secret" "telegram_allow_from" {
-  count     = var.telegram_owner_id != "" ? 1 : 0
-  secret_id = "${var.service_name}-telegram-allow-from"
-  replication {
-    auto {}
-  }
-}
-
-resource "google_secret_manager_secret_version" "telegram_allow_from" {
-  count       = var.telegram_owner_id != "" ? 1 : 0
-  secret      = google_secret_manager_secret.telegram_allow_from[0].id
-  secret_data = jsonencode({ version = 1, allowFrom = [var.telegram_owner_id] })
-}
-
 resource "google_secret_manager_secret" "futu_rsa_private_key" {
   secret_id = "${var.service_name}-futu-rsa-private-key"
   replication {
