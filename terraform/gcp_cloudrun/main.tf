@@ -181,15 +181,12 @@ resource "google_cloud_run_v2_service" "openclaw" {
         }
       }
 
-      dynamic "env" {
-        for_each = var.brave_api_key != "" ? [1] : []
-        content {
-          name = "BRAVE_API_KEY"
-          value_source {
-            secret_key_ref {
-              secret  = google_secret_manager_secret.brave_api_key[0].secret_id
-              version = "latest"
-            }
+      env {
+        name = "BRAVE_API_KEY"
+        value_source {
+          secret_key_ref {
+            secret  = google_secret_manager_secret.brave_api_key.secret_id
+            version = "latest"
           }
         }
       }

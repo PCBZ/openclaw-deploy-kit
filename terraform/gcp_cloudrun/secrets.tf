@@ -59,7 +59,6 @@ resource "google_secret_manager_secret_version" "gateway_token" {
 }
 
 resource "google_secret_manager_secret" "brave_api_key" {
-  count     = var.brave_api_key != "" ? 1 : 0
   secret_id = "${var.service_name}-brave-api-key"
   replication {
     auto {}
@@ -67,8 +66,7 @@ resource "google_secret_manager_secret" "brave_api_key" {
 }
 
 resource "google_secret_manager_secret_version" "brave_api_key" {
-  count       = var.brave_api_key != "" ? 1 : 0
-  secret      = google_secret_manager_secret.brave_api_key[0].id
+  secret      = google_secret_manager_secret.brave_api_key.id
   secret_data = var.brave_api_key
 }
 
