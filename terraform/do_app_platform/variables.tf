@@ -4,18 +4,6 @@ variable "do_token" {
   sensitive = true
 }
 
-# ── GitHub Source ────────────────────────────────────────────
-variable "github_repo" {
-  description = "GitHub repo in owner/name format, e.g. yourname/OpenClaw_Docker"
-  type        = string
-}
-
-variable "github_branch" {
-  description = "Branch to deploy from"
-  type        = string
-  default     = "do-app-platform"
-}
-
 # ── App Platform ─────────────────────────────────────────────
 variable "region" {
   description = "DigitalOcean region slug (e.g. tor, sfo, nyc, sgp, ams, fra)"

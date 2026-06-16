@@ -14,8 +14,8 @@ provider "digitalocean" {
 }
 
 # ── App Platform ─────────────────────────────────────────────
-# Builds directly from GitHub — no separate image push needed.
-# Every git push to the configured branch triggers a rebuild + redeploy.
+# Uses the official public OpenClaw image — no custom build needed.
+# Config is generated at startup from environment variables.
 
 resource "digitalocean_app" "openclaw" {
   spec {
@@ -27,15 +27,81 @@ resource "digitalocean_app" "openclaw" {
       instance_count     = 1
       instance_size_slug = var.instance_size
 
-      github {
-        repo           = var.github_repo
-        branch         = var.github_branch
-        deploy_on_push = true
+      image {
+        registry_type = "GHCR"
+        registry      = "openclaw"
+        repository    = "openclaw"
+        tag           = "latest"
       }
 
-      dockerfile_path = "docker/do_app_platform/Dockerfile"
+      # Generate config from env vars, then start the gateway.
+      # openclaw.json and auth-profiles.json are created fresh on every start.
+      run_command = <<-CMD
+        sh -c '
+          set -e
+          CONFIG="$HOME/.openclaw"
+          mkdir -p "$CONFIG/agents/main/agent" "$CONFIG/workspace"
 
-      # Health check via the gateway's built-in HTTP server
+          DM_POLICY="open"
+          ALLOW_FROM=""
+          if [ -n "$TELEGRAM_OWNER_ID" ]; then
+            DM_POLICY="allowlist"
+            ALLOW_FROM=", \"allowFrom\": [\"$TELEGRAM_OWNER_ID\"]"
+          fi
+
+          BRAVE_PLUGIN=""
+          if [ -n "$BRAVE_API_KEY" ]; then
+            BRAVE_PLUGIN=", \"brave\": { \"enabled\": true, \"config\": { \"webSearch\": { \"apiKey\": \"$BRAVE_API_KEY\" } } }"
+          fi
+
+          cat > "$CONFIG/openclaw.json" << JSON
+        {
+          "gateway": {
+            "bind": "all",
+            "auth": { "mode": "token", "token": "$OPENCLAW_GATEWAY_TOKEN" },
+            "mode": "local"
+          },
+          "agents": {
+            "defaults": {
+              "model": {
+                "primary": "openrouter/openai/gpt-4o-mini",
+                "fallbacks": ["openrouter/anthropic/claude-haiku-4.5", "openrouter/auto"]
+              },
+              "compaction": { "mode": "safeguard", "reserveTokensFloor": 4000 }
+            }
+          },
+          "tools": {
+            "web": { "search": { "enabled": true, "provider": "brave" }, "fetch": { "enabled": false } },
+            "deny": ["browser", "apply_patch"]
+          },
+          "plugins": {
+            "entries": {
+              "telegram": { "enabled": true },
+              "openrouter": { "enabled": true }$BRAVE_PLUGIN
+            }
+          },
+          "channels": {
+            "telegram": {
+              "enabled": true,
+              "accounts": {
+                "default": {
+                  "botToken": "$TELEGRAM_BOT_TOKEN",
+                  "dmPolicy": "$DM_POLICY",
+                  "groupPolicy": "open"$ALLOW_FROM
+                }
+              }
+            }
+          }
+        }
+        JSON
+
+          printf "{\"openrouter\":{\"apiKey\":\"%s\"}}" "$OPENROUTER_API_KEY" \
+            > "$CONFIG/agents/main/agent/auth-profiles.json"
+
+          exec openclaw gateway start
+        '
+      CMD
+
       http_port = 18789
 
       health_check {
@@ -46,18 +112,11 @@ resource "digitalocean_app" "openclaw" {
         failure_threshold     = 3
       }
 
-      # ── Env vars (plain) ───────────────────────────────────
       env {
         key   = "OPENCLAW_SKIP_ONBOARDING"
         value = "1"
       }
 
-      env {
-        key   = "NODE_ENV"
-        value = "production"
-      }
-
-      # ── Secrets ───────────────────────────────────────────
       env {
         key   = "OPENROUTER_API_KEY"
         value = var.openrouter_api_key
