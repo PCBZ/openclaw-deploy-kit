@@ -23,6 +23,7 @@
         "openrouter/google/gemini-2.5-pro":                                            {"alias": "gemini-pro"},
         "openrouter/google/gemini-2.5-flash":                                          {"alias": "flash"},
         "openrouter/google/gemma-4-31b-it:free":                                       {"alias": "gemma"},
+        "openrouter/google/gemma-4-26b-a4b-it:free":                                   {"alias": "gemma-moe"},
         "openrouter/x-ai/grok-4.3":                                                    {"alias": "grok"},
         "openrouter/deepseek/deepseek-v4-pro":                                         {"alias": "deepseek"},
         "openrouter/deepseek/deepseek-v4-flash":                                       {"alias": "deepseek-flash"},

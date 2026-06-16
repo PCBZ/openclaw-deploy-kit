@@ -87,6 +87,7 @@ resource "digitalocean_app" "openclaw" {
                 "openrouter/openai/gpt-oss-120b:free":                                       {"alias": "gpt-oss"},
                 "openrouter/openai/gpt-oss-20b:free":                                        {"alias": "gpt-oss-mini"},
                 "openrouter/google/gemma-4-31b-it:free":                                     {"alias": "gemma"},
+                "openrouter/google/gemma-4-26b-a4b-it:free":                                 {"alias": "gemma-moe"},
                 "openrouter/qwen/qwen3-coder:free":                                          {"alias": "coder"},
                 "openrouter/qwen/qwen3-next-80b-a3b-instruct:free":                          {"alias": "qwen3"},
                 "openrouter/poolside/laguna-m.1:free":                                       {"alias": "laguna"},
