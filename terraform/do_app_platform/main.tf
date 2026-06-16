@@ -65,7 +65,35 @@ resource "digitalocean_app" "openclaw" {
             "defaults": {
               "model": {
                 "primary": "openrouter/openai/gpt-4o-mini",
-                "fallbacks": ["openrouter/anthropic/claude-haiku-4.5", "openrouter/auto"]
+                "fallbacks": [
+                  "openrouter/anthropic/claude-haiku-4.5",
+                  "openrouter/openai/gpt-oss-120b:free",
+                  "openrouter/google/gemma-4-31b-it:free",
+                  "openrouter/meta-llama/llama-3.3-70b-instruct:free",
+                  "openrouter/auto"
+                ]
+              },
+              "models": {
+                "openrouter/anthropic/claude-opus-4.7":                                      {"alias": "opus"},
+                "openrouter/anthropic/claude-sonnet-4.6":                                    {"alias": "sonnet"},
+                "openrouter/anthropic/claude-haiku-4.5":                                     {"alias": "haiku"},
+                "openrouter/openai/gpt-5.4":                                                 {"alias": "gpt5"},
+                "openrouter/openai/gpt-4o-mini":                                             {"alias": "mini"},
+                "openrouter/google/gemini-2.5-flash":                                        {"alias": "flash"},
+                "openrouter/deepseek/deepseek-r1":                                           {"alias": "r1"},
+                "openrouter/nvidia/nemotron-3-ultra-550b-a55b:free":                         {"alias": "nemotron-ultra"},
+                "openrouter/nvidia/nemotron-3-super-120b-a12b:free":                         {"alias": "nemotron"},
+                "openrouter/nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free":             {"alias": "nemotron-nano"},
+                "openrouter/openai/gpt-oss-120b:free":                                       {"alias": "gpt-oss"},
+                "openrouter/openai/gpt-oss-20b:free":                                        {"alias": "gpt-oss-mini"},
+                "openrouter/google/gemma-4-31b-it:free":                                     {"alias": "gemma"},
+                "openrouter/qwen/qwen3-coder:free":                                          {"alias": "coder"},
+                "openrouter/qwen/qwen3-next-80b-a3b-instruct:free":                          {"alias": "qwen3"},
+                "openrouter/poolside/laguna-m.1:free":                                       {"alias": "laguna"},
+                "openrouter/nex-agi/nex-n2-pro:free":                                        {"alias": "nex"},
+                "openrouter/meta-llama/llama-3.3-70b-instruct:free":                         {"alias": "llama"},
+                "openrouter/cognitivecomputations/dolphin-mistral-24b-venice-edition:free":  {"alias": "uncensored"},
+                "openrouter/auto":                                                            {"alias": "auto"}
               },
               "compaction": { "mode": "safeguard", "reserveTokensFloor": 4000 }
             }
