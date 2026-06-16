@@ -13,19 +13,9 @@ provider "digitalocean" {
   token = var.do_token
 }
 
-# ── Container Registry (store our custom image) ──────────────
-
-resource "digitalocean_container_registry" "openclaw" {
-  name                   = "openclaw-registry"
-  subscription_tier_slug = "starter"
-  region                 = var.region
-}
-
-resource "digitalocean_container_registry_docker_credentials" "openclaw" {
-  registry_name = digitalocean_container_registry.openclaw.name
-}
-
 # ── App Platform ─────────────────────────────────────────────
+# Builds directly from GitHub — no separate image push needed.
+# Every git push to the configured branch triggers a rebuild + redeploy.
 
 resource "digitalocean_app" "openclaw" {
   spec {
@@ -37,16 +27,13 @@ resource "digitalocean_app" "openclaw" {
       instance_count     = 1
       instance_size_slug = var.instance_size
 
-      image {
-        registry_type = "DOCR"
-        registry      = digitalocean_container_registry.openclaw.name
-        repository    = "openclaw-telegram"
-        tag           = "latest"
-
-        deploy_on_push {
-          enabled = true
-        }
+      github {
+        repo           = var.github_repo
+        branch         = var.github_branch
+        deploy_on_push = true
       }
+
+      dockerfile_path = "docker/do_app_platform/Dockerfile"
 
       # Health check via the gateway's built-in HTTP server
       http_port = 18789

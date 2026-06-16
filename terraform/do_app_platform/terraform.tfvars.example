@@ -5,6 +5,12 @@
 # From https://cloud.digitalocean.com/account/api/tokens
 do_token = "your-digitalocean-api-token"
 
+# ── GitHub Source ────────────────────────────────────────────
+# Your GitHub repo in owner/name format. App Platform builds from this directly.
+# First run: you'll need to authorize DigitalOcean to access your GitHub in the DO console.
+github_repo   = "yourname/OpenClaw_Docker"
+github_branch = "do-app-platform"
+
 # ── App Platform ─────────────────────────────────────────────
 # Regions: tor (Toronto), sfo (San Francisco), nyc (New York), sgp (Singapore), ams (Amsterdam), fra (Frankfurt)
 region = "tor"
