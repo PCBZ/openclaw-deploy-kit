@@ -1,0 +1,27 @@
+# Copy to terraform.tfvars and fill in your values
+# cp terraform.tfvars.example terraform.tfvars
+
+# ── DigitalOcean Auth ────────────────────────────────────────
+# From https://cloud.digitalocean.com/account/api/tokens
+do_token = "your-digitalocean-api-token"
+
+# ── App Platform ─────────────────────────────────────────────
+# Regions: tor (Toronto), sfo (San Francisco), nyc (New York), sgp (Singapore), ams (Amsterdam), fra (Frankfurt)
+region = "tor"
+
+# Instance sizes: basic-xxs=$5/mo (512MB), basic-xs=$10/mo (1GB), basic-s=$18/mo (2GB)
+# Recommend basic-xs or higher — OpenClaw needs ~300-400MB RAM
+instance_size = "basic-xs"
+
+# ── Secrets ──────────────────────────────────────────────────
+openrouter_api_key     = "sk-or-v1-your-key-here"
+telegram_bot_token     = "1234567890:your-token-here"
+openclaw_gateway_token = "your-secret-gateway-token"
+
+# ── Optional ─────────────────────────────────────────────────
+# Brave Search API key (https://api.search.brave.com/) — free: 1000 req/month
+brave_api_key = ""
+
+# Your Telegram numeric user ID (get from @userinfobot)
+# If set, only this user can DM the bot
+telegram_owner_id = ""
