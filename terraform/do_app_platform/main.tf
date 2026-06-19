@@ -61,21 +61,23 @@ locals {
     }
     tools = {
       web = {
-        search = var.brave_api_key != "" ? { enabled = true, provider = "brave" } : { enabled = false }
-        fetch  = { enabled = false }
+        search = {
+          enabled  = var.brave_api_key != "" ? true : false
+          provider = var.brave_api_key != "" ? "brave" : "duckduckgo"
+        }
+        fetch = { enabled = false }
       }
       deny = ["browser", "apply_patch"]
     }
     plugins = {
-      entries = merge(
-        {
-          telegram   = { enabled = true }
-          openrouter = { enabled = true }
-        },
-        var.brave_api_key != "" ? {
-          brave = { enabled = true, config = { webSearch = { apiKey = var.brave_api_key } } }
-        } : {}
-      )
+      entries = var.brave_api_key != "" ? {
+        telegram   = { enabled = true }
+        openrouter = { enabled = true }
+        brave      = { enabled = true, config = { webSearch = { apiKey = var.brave_api_key } } }
+      } : {
+        telegram   = { enabled = true }
+        openrouter = { enabled = true }
+      }
     }
     channels = {
       telegram = {
