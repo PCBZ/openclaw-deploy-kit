@@ -57,7 +57,7 @@ resource "digitalocean_app" "openclaw" {
           cat > "$CONFIG/openclaw.json" << JSON
         {
           "gateway": {
-            "bind": "all",
+            "bind": "auto",
             "auth": { "mode": "token", "token": "$OPENCLAW_GATEWAY_TOKEN" },
             "mode": "local"
           },
