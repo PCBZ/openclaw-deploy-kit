@@ -1,7 +1,8 @@
 # ── DigitalOcean Auth ────────────────────────────────────────
 variable "do_token" {
-  type      = string
-  sensitive = true
+  description = "DigitalOcean personal access token — also used as DO Inference API key"
+  type        = string
+  sensitive   = true
 }
 
 # ── App Platform ─────────────────────────────────────────────
@@ -12,17 +13,12 @@ variable "region" {
 }
 
 variable "instance_size" {
-  description = "App Platform instance size slug. basic-xxs=$5, basic-xs=$10, basic-s=$18"
+  description = "App Platform instance size slug. apps-s-1vcpu-1gb=$10, apps-s-1vcpu-2gb=$25, apps-s-2vcpu-4gb=$50"
   type        = string
-  default     = "basic-xs"
+  default     = "apps-s-1vcpu-1gb"
 }
 
 # ── Secrets ──────────────────────────────────────────────────
-variable "openrouter_api_key" {
-  type      = string
-  sensitive = true
-}
-
 variable "telegram_bot_token" {
   type      = string
   sensitive = true

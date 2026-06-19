@@ -24,39 +24,45 @@ locals {
     agents = {
       defaults = {
         model = {
-          primary   = "openrouter/openai/gpt-4o-mini"
+          primary   = "do-inference/openai-gpt-4o-mini"
           fallbacks = [
-            "openrouter/anthropic/claude-haiku-4.5",
-            "openrouter/openai/gpt-oss-120b:free",
-            "openrouter/google/gemma-4-31b-it:free",
-            "openrouter/meta-llama/llama-3.3-70b-instruct:free",
-            "openrouter/auto"
+            "do-inference/anthropic-claude-haiku-4.5",
+            "do-inference/deepseek-v4-flash",
+            "do-inference/google-gemma-4",
+            "do-inference/nvidia-nemotron-3-super-120b"
           ]
         }
         models = {
-          "openrouter/anthropic/claude-opus-4.7"                                       = { alias = "opus" }
-          "openrouter/anthropic/claude-sonnet-4.6"                                     = { alias = "sonnet" }
-          "openrouter/anthropic/claude-haiku-4.5"                                      = { alias = "haiku" }
-          "openrouter/openai/gpt-5.4"                                                  = { alias = "gpt5" }
-          "openrouter/openai/gpt-4o-mini"                                              = { alias = "mini" }
-          "openrouter/google/gemini-2.5-flash"                                         = { alias = "flash" }
-          "openrouter/deepseek/deepseek-r1"                                            = { alias = "r1" }
-          "openrouter/nvidia/nemotron-3-ultra-550b-a55b:free"                          = { alias = "nemotron-ultra" }
-          "openrouter/nvidia/nemotron-3-super-120b-a12b:free"                          = { alias = "nemotron" }
-          "openrouter/nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free"              = { alias = "nemotron-nano" }
-          "openrouter/openai/gpt-oss-120b:free"                                        = { alias = "gpt-oss" }
-          "openrouter/openai/gpt-oss-20b:free"                                         = { alias = "gpt-oss-mini" }
-          "openrouter/google/gemma-4-31b-it:free"                                      = { alias = "gemma" }
-          "openrouter/google/gemma-4-26b-a4b-it:free"                                  = { alias = "gemma-moe" }
-          "openrouter/qwen/qwen3-coder:free"                                           = { alias = "coder" }
-          "openrouter/qwen/qwen3-next-80b-a3b-instruct:free"                           = { alias = "qwen3" }
-          "openrouter/poolside/laguna-m.1:free"                                        = { alias = "laguna" }
-          "openrouter/nex-agi/nex-n2-pro:free"                                         = { alias = "nex" }
-          "openrouter/meta-llama/llama-3.3-70b-instruct:free"                          = { alias = "llama" }
-          "openrouter/cognitivecomputations/dolphin-mistral-24b-venice-edition:free"   = { alias = "uncensored" }
-          "openrouter/auto"                                                             = { alias = "auto" }
+          # Anthropic
+          "do-inference/anthropic-claude-opus-4.8"       = { alias = "opus" }
+          "do-inference/anthropic-claude-4.6-sonnet"     = { alias = "sonnet" }
+          "do-inference/anthropic-claude-haiku-4.5"      = { alias = "haiku" }
+          # OpenAI
+          "do-inference/openai-gpt-5.4"                  = { alias = "gpt5" }
+          "do-inference/openai-gpt-5-mini"               = { alias = "gpt5-mini" }
+          "do-inference/openai-gpt-5-nano"               = { alias = "nano" }
+          "do-inference/openai-gpt-4o-mini"              = { alias = "mini" }
+          "do-inference/openai-gpt-oss-120b"             = { alias = "gpt-oss" }
+          "do-inference/openai-gpt-oss-20b"              = { alias = "gpt-oss-mini" }
+          # Open source
+          "do-inference/deepseek-v4-pro"                 = { alias = "deepseek" }
+          "do-inference/deepseek-v4-flash"               = { alias = "deepseek-flash" }
+          "do-inference/deepseek-r1-distill-llama-70b"   = { alias = "r1" }
+          "do-inference/google-gemma-4"                  = { alias = "gemma" }
+          "do-inference/nvidia-nemotron-3-ultra"         = { alias = "nemotron-ultra" }
+          "do-inference/nvidia-nemotron-3-super-120b"    = { alias = "nemotron" }
+          "do-inference/qwen3-32b"                       = { alias = "qwen3" }
+          "do-inference/meta-llama-3.3-instruct-70b"     = { alias = "llama" }
+          "do-inference/kimi-k2.6"                       = { alias = "kimi" }
         }
         compaction = { mode = "safeguard", reserveTokensFloor = 4000 }
+      }
+    }
+    models = {
+      providers = {
+        "do-inference" = {
+          baseUrl = "https://inference.do-ai.run/v1"
+        }
       }
     }
     tools = {
@@ -71,8 +77,7 @@ locals {
     }
     plugins = {
       entries = {
-        telegram   = { enabled = true }
-        openrouter = { enabled = true }
+        telegram = { enabled = true }
         brave = {
           enabled = var.brave_api_key != "" ? true : false
           config  = { webSearch = { apiKey = var.brave_api_key } }
@@ -97,7 +102,7 @@ locals {
   })
 
   auth_profiles = jsonencode({
-    openrouter = { apiKey = var.openrouter_api_key }
+    "do-inference" = { apiKey = var.do_token }
   })
 }
 
@@ -120,8 +125,6 @@ resource "digitalocean_app" "openclaw" {
         tag           = "latest"
       }
 
-      # Decode base64 configs, write to disk, start gateway in foreground.
-      # Simple one-liner — no heredoc, no shell quoting issues.
       run_command = "sh -c 'mkdir -p $HOME/.openclaw/agents/main/agent && echo \"$OPENCLAW_CONFIG_B64\" | base64 -d > $HOME/.openclaw/openclaw.json && echo \"$OPENCLAW_AUTH_B64\" | base64 -d > $HOME/.openclaw/agents/main/agent/auth-profiles.json && node dist/index.js gateway --port 18789 --bind lan'"
 
       http_port = 18789
@@ -139,7 +142,6 @@ resource "digitalocean_app" "openclaw" {
         value = "1"
       }
 
-      # Rendered configs passed as base64 — no secrets exposed in run_command
       env {
         key   = "OPENCLAW_CONFIG_B64"
         value = base64encode(local.openclaw_config)
@@ -149,12 +151,6 @@ resource "digitalocean_app" "openclaw" {
       env {
         key   = "OPENCLAW_AUTH_B64"
         value = base64encode(local.auth_profiles)
-        type  = "SECRET"
-      }
-
-      env {
-        key   = "OPENROUTER_API_KEY"
-        value = var.openrouter_api_key
         type  = "SECRET"
       }
 
