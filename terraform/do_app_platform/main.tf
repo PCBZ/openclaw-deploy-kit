@@ -50,7 +50,9 @@ resource "digitalocean_app" "openclaw" {
           fi
 
           BRAVE_PLUGIN=""
+          WEB_SEARCH="{ \"enabled\": false }"
           if [ -n "$BRAVE_API_KEY" ]; then
+            WEB_SEARCH="{ \"enabled\": true, \"provider\": \"brave\" }"
             BRAVE_PLUGIN=", \"brave\": { \"enabled\": true, \"config\": { \"webSearch\": { \"apiKey\": \"$BRAVE_API_KEY\" } } }"
           fi
 
@@ -100,7 +102,7 @@ resource "digitalocean_app" "openclaw" {
             }
           },
           "tools": {
-            "web": { "search": { "enabled": true, "provider": "brave" }, "fetch": { "enabled": false } },
+            "web": { "search": $WEB_SEARCH, "fetch": { "enabled": false } },
             "deny": ["browser", "apply_patch"]
           },
           "plugins": {
