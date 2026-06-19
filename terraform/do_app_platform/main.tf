@@ -33,18 +33,32 @@ locals {
           ]
         }
         models = {
-          # Anthropic
+          # ── Anthropic Claude ─────────────────────────────
           "do-inference/anthropic-claude-opus-4.8"       = { alias = "opus" }
+          "do-inference/anthropic-claude-opus-4.7"       = { alias = "opus-4.7" }
           "do-inference/anthropic-claude-4.6-sonnet"     = { alias = "sonnet" }
+          "do-inference/anthropic-claude-4.5-sonnet"     = { alias = "sonnet-4.5" }
           "do-inference/anthropic-claude-haiku-4.5"      = { alias = "haiku" }
-          # OpenAI
-          "do-inference/openai-gpt-5.4"                  = { alias = "gpt5" }
-          "do-inference/openai-gpt-5-mini"               = { alias = "gpt5-mini" }
+          # ── OpenAI GPT-5 ─────────────────────────────────
+          "do-inference/openai-gpt-5.5"                  = { alias = "gpt5.5" }
+          "do-inference/openai-gpt-5.4"                  = { alias = "gpt5.4" }
+          "do-inference/openai-gpt-5.4-mini"             = { alias = "gpt5-mini" }
+          "do-inference/openai-gpt-5.4-nano"             = { alias = "gpt5-nano" }
+          "do-inference/openai-gpt-5"                    = { alias = "gpt5" }
+          "do-inference/openai-gpt-5-mini"               = { alias = "mini5" }
           "do-inference/openai-gpt-5-nano"               = { alias = "nano" }
+          # ── OpenAI GPT-4 ─────────────────────────────────
+          "do-inference/openai-gpt-4o"                   = { alias = "gpt4o" }
           "do-inference/openai-gpt-4o-mini"              = { alias = "mini" }
+          "do-inference/openai-gpt-4.1"                  = { alias = "gpt4.1" }
+          # ── OpenAI Reasoning ─────────────────────────────
+          "do-inference/openai-o3"                       = { alias = "o3" }
+          "do-inference/openai-o3-mini"                  = { alias = "o3-mini" }
+          "do-inference/openai-o1"                       = { alias = "o1" }
+          # ── OpenAI OSS ───────────────────────────────────
           "do-inference/openai-gpt-oss-120b"             = { alias = "gpt-oss" }
           "do-inference/openai-gpt-oss-20b"              = { alias = "gpt-oss-mini" }
-          # Open source
+          # ── Open source ──────────────────────────────────
           "do-inference/deepseek-v4-pro"                 = { alias = "deepseek" }
           "do-inference/deepseek-v4-flash"               = { alias = "deepseek-flash" }
           "do-inference/deepseek-r1-distill-llama-70b"   = { alias = "r1" }
