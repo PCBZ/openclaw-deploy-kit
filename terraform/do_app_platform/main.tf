@@ -70,13 +70,13 @@ locals {
       deny = ["browser", "apply_patch"]
     }
     plugins = {
-      entries = var.brave_api_key != "" ? {
+      entries = {
         telegram   = { enabled = true }
         openrouter = { enabled = true }
-        brave      = { enabled = true, config = { webSearch = { apiKey = var.brave_api_key } } }
-      } : {
-        telegram   = { enabled = true }
-        openrouter = { enabled = true }
+        brave = {
+          enabled = var.brave_api_key != "" ? true : false
+          config  = { webSearch = { apiKey = var.brave_api_key } }
+        }
       }
     }
     channels = {
