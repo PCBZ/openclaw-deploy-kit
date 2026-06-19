@@ -13,9 +13,93 @@ provider "digitalocean" {
   token = var.do_token
 }
 
+# ── Config rendered at plan time, passed as base64 env vars ──
+locals {
+  openclaw_config = jsonencode({
+    gateway = {
+      bind = "lan"
+      auth = { mode = "token", token = var.openclaw_gateway_token }
+      mode = "local"
+    }
+    agents = {
+      defaults = {
+        model = {
+          primary   = "openrouter/openai/gpt-4o-mini"
+          fallbacks = [
+            "openrouter/anthropic/claude-haiku-4.5",
+            "openrouter/openai/gpt-oss-120b:free",
+            "openrouter/google/gemma-4-31b-it:free",
+            "openrouter/meta-llama/llama-3.3-70b-instruct:free",
+            "openrouter/auto"
+          ]
+        }
+        models = {
+          "openrouter/anthropic/claude-opus-4.7"                                       = { alias = "opus" }
+          "openrouter/anthropic/claude-sonnet-4.6"                                     = { alias = "sonnet" }
+          "openrouter/anthropic/claude-haiku-4.5"                                      = { alias = "haiku" }
+          "openrouter/openai/gpt-5.4"                                                  = { alias = "gpt5" }
+          "openrouter/openai/gpt-4o-mini"                                              = { alias = "mini" }
+          "openrouter/google/gemini-2.5-flash"                                         = { alias = "flash" }
+          "openrouter/deepseek/deepseek-r1"                                            = { alias = "r1" }
+          "openrouter/nvidia/nemotron-3-ultra-550b-a55b:free"                          = { alias = "nemotron-ultra" }
+          "openrouter/nvidia/nemotron-3-super-120b-a12b:free"                          = { alias = "nemotron" }
+          "openrouter/nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free"              = { alias = "nemotron-nano" }
+          "openrouter/openai/gpt-oss-120b:free"                                        = { alias = "gpt-oss" }
+          "openrouter/openai/gpt-oss-20b:free"                                         = { alias = "gpt-oss-mini" }
+          "openrouter/google/gemma-4-31b-it:free"                                      = { alias = "gemma" }
+          "openrouter/google/gemma-4-26b-a4b-it:free"                                  = { alias = "gemma-moe" }
+          "openrouter/qwen/qwen3-coder:free"                                           = { alias = "coder" }
+          "openrouter/qwen/qwen3-next-80b-a3b-instruct:free"                           = { alias = "qwen3" }
+          "openrouter/poolside/laguna-m.1:free"                                        = { alias = "laguna" }
+          "openrouter/nex-agi/nex-n2-pro:free"                                         = { alias = "nex" }
+          "openrouter/meta-llama/llama-3.3-70b-instruct:free"                          = { alias = "llama" }
+          "openrouter/cognitivecomputations/dolphin-mistral-24b-venice-edition:free"   = { alias = "uncensored" }
+          "openrouter/auto"                                                             = { alias = "auto" }
+        }
+        compaction = { mode = "safeguard", reserveTokensFloor = 4000 }
+      }
+    }
+    tools = {
+      web = {
+        search = var.brave_api_key != "" ? { enabled = true, provider = "brave" } : { enabled = false }
+        fetch  = { enabled = false }
+      }
+      deny = ["browser", "apply_patch"]
+    }
+    plugins = {
+      entries = merge(
+        {
+          telegram   = { enabled = true }
+          openrouter = { enabled = true }
+        },
+        var.brave_api_key != "" ? {
+          brave = { enabled = true, config = { webSearch = { apiKey = var.brave_api_key } } }
+        } : {}
+      )
+    }
+    channels = {
+      telegram = {
+        enabled = true
+        accounts = {
+          default = merge(
+            {
+              botToken    = var.telegram_bot_token
+              dmPolicy    = var.telegram_owner_id != "" ? "allowlist" : "open"
+              groupPolicy = "open"
+            },
+            var.telegram_owner_id != "" ? { allowFrom = [var.telegram_owner_id] } : {}
+          )
+        }
+      }
+    }
+  })
+
+  auth_profiles = jsonencode({
+    openrouter = { apiKey = var.openrouter_api_key }
+  })
+}
+
 # ── App Platform ─────────────────────────────────────────────
-# Uses the official public OpenClaw image — no custom build needed.
-# Config is generated at startup from environment variables.
 
 resource "digitalocean_app" "openclaw" {
   spec {
@@ -34,104 +118,9 @@ resource "digitalocean_app" "openclaw" {
         tag           = "latest"
       }
 
-      # Generate config from env vars, then start the gateway.
-      # openclaw.json and auth-profiles.json are created fresh on every start.
-      run_command = <<-CMD
-        sh -c '
-          set -e
-          CONFIG="$HOME/.openclaw"
-          mkdir -p "$CONFIG/agents/main/agent" "$CONFIG/workspace"
-
-          DM_POLICY="open"
-          ALLOW_FROM=""
-          if [ -n "$TELEGRAM_OWNER_ID" ]; then
-            DM_POLICY="allowlist"
-            ALLOW_FROM=", \"allowFrom\": [\"$TELEGRAM_OWNER_ID\"]"
-          fi
-
-          BRAVE_PLUGIN=""
-          WEB_SEARCH="{ \"enabled\": false }"
-          if [ -n "$BRAVE_API_KEY" ]; then
-            WEB_SEARCH="{ \"enabled\": true, \"provider\": \"brave\" }"
-            BRAVE_PLUGIN=", \"brave\": { \"enabled\": true, \"config\": { \"webSearch\": { \"apiKey\": \"$BRAVE_API_KEY\" } } }"
-          fi
-
-          cat > "$CONFIG/openclaw.json" << JSON
-        {
-          "gateway": {
-            "bind": "auto",
-            "auth": { "mode": "token", "token": "$OPENCLAW_GATEWAY_TOKEN" },
-            "mode": "local"
-          },
-          "agents": {
-            "defaults": {
-              "model": {
-                "primary": "openrouter/openai/gpt-4o-mini",
-                "fallbacks": [
-                  "openrouter/anthropic/claude-haiku-4.5",
-                  "openrouter/openai/gpt-oss-120b:free",
-                  "openrouter/google/gemma-4-31b-it:free",
-                  "openrouter/meta-llama/llama-3.3-70b-instruct:free",
-                  "openrouter/auto"
-                ]
-              },
-              "models": {
-                "openrouter/anthropic/claude-opus-4.7":                                      {"alias": "opus"},
-                "openrouter/anthropic/claude-sonnet-4.6":                                    {"alias": "sonnet"},
-                "openrouter/anthropic/claude-haiku-4.5":                                     {"alias": "haiku"},
-                "openrouter/openai/gpt-5.4":                                                 {"alias": "gpt5"},
-                "openrouter/openai/gpt-4o-mini":                                             {"alias": "mini"},
-                "openrouter/google/gemini-2.5-flash":                                        {"alias": "flash"},
-                "openrouter/deepseek/deepseek-r1":                                           {"alias": "r1"},
-                "openrouter/nvidia/nemotron-3-ultra-550b-a55b:free":                         {"alias": "nemotron-ultra"},
-                "openrouter/nvidia/nemotron-3-super-120b-a12b:free":                         {"alias": "nemotron"},
-                "openrouter/nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free":             {"alias": "nemotron-nano"},
-                "openrouter/openai/gpt-oss-120b:free":                                       {"alias": "gpt-oss"},
-                "openrouter/openai/gpt-oss-20b:free":                                        {"alias": "gpt-oss-mini"},
-                "openrouter/google/gemma-4-31b-it:free":                                     {"alias": "gemma"},
-                "openrouter/google/gemma-4-26b-a4b-it:free":                                 {"alias": "gemma-moe"},
-                "openrouter/qwen/qwen3-coder:free":                                          {"alias": "coder"},
-                "openrouter/qwen/qwen3-next-80b-a3b-instruct:free":                          {"alias": "qwen3"},
-                "openrouter/poolside/laguna-m.1:free":                                       {"alias": "laguna"},
-                "openrouter/nex-agi/nex-n2-pro:free":                                        {"alias": "nex"},
-                "openrouter/meta-llama/llama-3.3-70b-instruct:free":                         {"alias": "llama"},
-                "openrouter/cognitivecomputations/dolphin-mistral-24b-venice-edition:free":  {"alias": "uncensored"},
-                "openrouter/auto":                                                            {"alias": "auto"}
-              },
-              "compaction": { "mode": "safeguard", "reserveTokensFloor": 4000 }
-            }
-          },
-          "tools": {
-            "web": { "search": $WEB_SEARCH, "fetch": { "enabled": false } },
-            "deny": ["browser", "apply_patch"]
-          },
-          "plugins": {
-            "entries": {
-              "telegram": { "enabled": true },
-              "openrouter": { "enabled": true }$BRAVE_PLUGIN
-            }
-          },
-          "channels": {
-            "telegram": {
-              "enabled": true,
-              "accounts": {
-                "default": {
-                  "botToken": "$TELEGRAM_BOT_TOKEN",
-                  "dmPolicy": "$DM_POLICY",
-                  "groupPolicy": "open"$ALLOW_FROM
-                }
-              }
-            }
-          }
-        }
-        JSON
-
-          printf "{\"openrouter\":{\"apiKey\":\"%s\"}}" "$OPENROUTER_API_KEY" \
-            > "$CONFIG/agents/main/agent/auth-profiles.json"
-
-          exec openclaw gateway start
-        '
-      CMD
+      # Decode base64 configs, write to disk, start gateway in foreground.
+      # Simple one-liner — no heredoc, no shell quoting issues.
+      run_command = "sh -c 'mkdir -p $HOME/.openclaw/agents/main/agent && echo \"$OPENCLAW_CONFIG_B64\" | base64 -d > $HOME/.openclaw/openclaw.json && echo \"$OPENCLAW_AUTH_B64\" | base64 -d > $HOME/.openclaw/agents/main/agent/auth-profiles.json && node dist/index.js gateway --port 18789 --bind lan'"
 
       http_port = 18789
 
@@ -146,6 +135,19 @@ resource "digitalocean_app" "openclaw" {
       env {
         key   = "OPENCLAW_SKIP_ONBOARDING"
         value = "1"
+      }
+
+      # Rendered configs passed as base64 — no secrets exposed in run_command
+      env {
+        key   = "OPENCLAW_CONFIG_B64"
+        value = base64encode(local.openclaw_config)
+        type  = "SECRET"
+      }
+
+      env {
+        key   = "OPENCLAW_AUTH_B64"
+        value = base64encode(local.auth_profiles)
+        type  = "SECRET"
       }
 
       env {
