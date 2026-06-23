@@ -41,3 +41,16 @@ variable "telegram_owner_id" {
   type        = string
   default     = ""
 }
+
+variable "mlx_base_url" {
+  description = "mlx-vlm server base URL (e.g. Cloudflare Tunnel). Leave empty to disable."
+  type        = string
+  default     = ""
+}
+
+variable "mlx_api_key" {
+  description = "mlx-vlm server API key."
+  type        = string
+  sensitive   = true
+  default     = ""
+}

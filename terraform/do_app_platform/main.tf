@@ -24,65 +24,107 @@ locals {
     agents = {
       defaults = {
         model = {
-          primary   = "do-inference/openai-gpt-4o-mini"
+          primary   = "do-inference/deepseek-4-flash"
           fallbacks = [
-            "do-inference/anthropic-claude-haiku-4.5",
-            "do-inference/deepseek-v4-flash",
-            "do-inference/google-gemma-4",
-            "do-inference/nvidia-nemotron-3-super-120b"
+            "do-inference/llama-4-maverick",
+            "do-inference/deepseek-v4-pro",
+            "do-inference/openai-gpt-oss-120b",
+            "do-inference/llama3.3-70b-instruct"
           ]
         }
-        models = {
-          # ── Anthropic Claude ─────────────────────────────
-          "do-inference/anthropic-claude-opus-4.8"       = { alias = "opus" }
-          "do-inference/anthropic-claude-opus-4.7"       = { alias = "opus-4.7" }
-          "do-inference/anthropic-claude-4.6-sonnet"     = { alias = "sonnet" }
-          "do-inference/anthropic-claude-4.5-sonnet"     = { alias = "sonnet-4.5" }
-          "do-inference/anthropic-claude-haiku-4.5"      = { alias = "haiku" }
-          # ── OpenAI GPT-5 ─────────────────────────────────
-          "do-inference/openai-gpt-5.5"                  = { alias = "gpt5.5" }
-          "do-inference/openai-gpt-5.4"                  = { alias = "gpt5.4" }
-          "do-inference/openai-gpt-5.4-mini"             = { alias = "gpt5-mini" }
-          "do-inference/openai-gpt-5.4-nano"             = { alias = "gpt5-nano" }
-          "do-inference/openai-gpt-5"                    = { alias = "gpt5" }
-          "do-inference/openai-gpt-5-mini"               = { alias = "mini5" }
-          "do-inference/openai-gpt-5-nano"               = { alias = "nano" }
-          # ── OpenAI GPT-4 ─────────────────────────────────
-          "do-inference/openai-gpt-4o"                   = { alias = "gpt4o" }
-          "do-inference/openai-gpt-4o-mini"              = { alias = "mini" }
-          "do-inference/openai-gpt-4.1"                  = { alias = "gpt4.1" }
-          # ── OpenAI Reasoning ─────────────────────────────
-          "do-inference/openai-o3"                       = { alias = "o3" }
-          "do-inference/openai-o3-mini"                  = { alias = "o3-mini" }
-          "do-inference/openai-o1"                       = { alias = "o1" }
-          # ── OpenAI OSS ───────────────────────────────────
-          "do-inference/openai-gpt-oss-120b"             = { alias = "gpt-oss" }
-          "do-inference/openai-gpt-oss-20b"              = { alias = "gpt-oss-mini" }
-          # ── Open source ──────────────────────────────────
+        models = merge(
+          var.mlx_base_url != "" ? {
+            "mlx/mlx-community/gemma-4-12B-it-qat-4bit" = { alias = "local" }
+          } : {},
+          {
+          # ── DeepSeek ─────────────────────────────────────
+          "do-inference/deepseek-4-flash"                = { alias = "flash" }
           "do-inference/deepseek-v4-pro"                 = { alias = "deepseek" }
-          "do-inference/deepseek-v4-flash"               = { alias = "deepseek-flash" }
+          "do-inference/deepseek-3.2"                    = { alias = "deepseek-3.2" }
           "do-inference/deepseek-r1-distill-llama-70b"   = { alias = "r1" }
-          "do-inference/google-gemma-4"                  = { alias = "gemma" }
-          "do-inference/nvidia-nemotron-3-ultra"         = { alias = "nemotron-ultra" }
+          # ── Meta Llama ───────────────────────────────────
+          "do-inference/llama-4-maverick"                = { alias = "maverick" }
+          "do-inference/llama3.3-70b-instruct"           = { alias = "llama" }
+          # ── OpenAI OSS (DO-hosted) ────────────────────────
+          "do-inference/openai-gpt-oss-120b"             = { alias = "oss" }
+          "do-inference/openai-gpt-oss-20b"              = { alias = "oss-mini" }
+          # ── Qwen ─────────────────────────────────────────
+          "do-inference/alibaba-qwen3-32b"               = { alias = "qwen3" }
+          "do-inference/qwen3.5-397b-a17b"               = { alias = "qwen3.5" }
+          "do-inference/qwen3-coder-flash"               = { alias = "qwen-coder" }
+          # ── NVIDIA Nemotron ───────────────────────────────
+          "do-inference/nemotron-3-ultra-550b"           = { alias = "nemotron-ultra" }
           "do-inference/nvidia-nemotron-3-super-120b"    = { alias = "nemotron" }
-          "do-inference/qwen3-32b"                       = { alias = "qwen3" }
-          "do-inference/meta-llama-3.3-instruct-70b"     = { alias = "llama" }
+          "do-inference/nemotron-3-nano-omni"            = { alias = "nemotron-nano" }
+          # ── Google Gemma ──────────────────────────────────
+          "do-inference/gemma-4-31B-it"                  = { alias = "gemma" }
+          # ── Kimi ─────────────────────────────────────────
           "do-inference/kimi-k2.6"                       = { alias = "kimi" }
-        }
+          "do-inference/kimi-k2.5"                       = { alias = "kimi-k2.5" }
+          # ── MiniMax ──────────────────────────────────────
+          "do-inference/minimax-m2.5"                    = { alias = "minimax" }
+          # ── Mistral ──────────────────────────────────────
+          "do-inference/mistral-3-14B"                   = { alias = "mistral" }
+          # ── GLM ──────────────────────────────────────────
+          "do-inference/glm-5"                           = { alias = "glm" }
+          # ── Arcee ────────────────────────────────────────
+          "do-inference/arcee-trinity-large-thinking"    = { alias = "arcee" }
+          # ── Mimo ─────────────────────────────────────────
+          "do-inference/mimo-v2.5-pro"                   = { alias = "mimo" }
+          "do-inference/mimo-v2.5"                       = { alias = "mimo-mini" }
+        })
         compaction = { mode = "safeguard", reserveTokensFloor = 4000 }
       }
     }
     models = {
-      providers = {
+      providers = merge(
+        var.mlx_base_url != "" ? {
+          "mlx" = {
+            baseUrl        = var.mlx_base_url
+            apiKey         = var.mlx_api_key
+            timeoutSeconds = 300
+            models         = [
+              { id = "mlx-community/gemma-4-12B-it-qat-4bit",  name = "Gemma 4 12B (local)" },
+              { id = "mlx-community/Qwen3.5-9B-OptiQ-4bit",    name = "Qwen3.5 9B (local)" }
+            ]
+          }
+        } : {},
+        {
         "do-inference" = {
           baseUrl = "https://inference.do-ai.run/v1"
+          apiKey  = var.do_token
+          models = [
+            { id = "deepseek-4-flash",               name = "DeepSeek 4 Flash" },
+            { id = "deepseek-v4-pro",                name = "DeepSeek V4 Pro" },
+            { id = "deepseek-3.2",                   name = "DeepSeek 3.2" },
+            { id = "deepseek-r1-distill-llama-70b",  name = "DeepSeek R1 70B" },
+            { id = "llama-4-maverick",               name = "Llama 4 Maverick" },
+            { id = "llama3.3-70b-instruct",          name = "Llama 3.3 70B" },
+            { id = "openai-gpt-oss-120b",            name = "GPT OSS 120B" },
+            { id = "openai-gpt-oss-20b",             name = "GPT OSS 20B" },
+            { id = "alibaba-qwen3-32b",              name = "Qwen3 32B" },
+            { id = "qwen3.5-397b-a17b",              name = "Qwen3.5 397B" },
+            { id = "qwen3-coder-flash",              name = "Qwen3 Coder Flash" },
+            { id = "nemotron-3-ultra-550b",          name = "Nemotron Ultra 550B" },
+            { id = "nvidia-nemotron-3-super-120b",   name = "Nemotron Super 120B" },
+            { id = "nemotron-3-nano-omni",           name = "Nemotron Nano Omni" },
+            { id = "gemma-4-31B-it",                 name = "Gemma 4 31B" },
+            { id = "kimi-k2.6",                      name = "Kimi K2.6" },
+            { id = "kimi-k2.5",                      name = "Kimi K2.5" },
+            { id = "minimax-m2.5",                   name = "MiniMax M2.5" },
+            { id = "mistral-3-14B",                  name = "Mistral 3 14B" },
+            { id = "glm-5",                          name = "GLM-5" },
+            { id = "arcee-trinity-large-thinking",   name = "Arcee Trinity Thinking" },
+            { id = "mimo-v2.5-pro",                  name = "Mimo v2.5 Pro" },
+            { id = "mimo-v2.5",                      name = "Mimo v2.5" }
+          ]
         }
-      }
+        })
     }
     tools = {
       web = {
         search = {
-          enabled  = var.brave_api_key != "" ? true : false
+          enabled  = true
           provider = var.brave_api_key != "" ? "brave" : "duckduckgo"
         }
         fetch = { enabled = false }
