@@ -34,7 +34,7 @@ locals {
         }
         models = merge(
           var.mlx_base_url != "" ? {
-            "mlx/mlx-community/gemma-4-12B-it-qat-4bit" = { alias = "local" }
+            "mlx/mlx-community/gemma-4-12B-it-4bit" = { alias = "local" }
           } : {},
           {
           # ── DeepSeek ─────────────────────────────────────
@@ -73,7 +73,8 @@ locals {
           "do-inference/mimo-v2.5-pro"                   = { alias = "mimo" }
           "do-inference/mimo-v2.5"                       = { alias = "mimo-mini" }
         })
-        compaction = { mode = "safeguard", reserveTokensFloor = 4000 }
+        timeoutSeconds = 600
+        compaction     = { mode = "safeguard", reserveTokensFloor = 4000 }
       }
     }
     models = {
@@ -84,8 +85,8 @@ locals {
             apiKey         = var.mlx_api_key
             timeoutSeconds = 300
             models         = [
-              { id = "mlx-community/gemma-4-12B-it-qat-4bit",  name = "Gemma 4 12B (local)" },
-              { id = "mlx-community/Qwen3.5-9B-OptiQ-4bit",    name = "Qwen3.5 9B (local)" }
+              { id = "mlx-community/gemma-4-12B-it-4bit",   name = "Gemma 4 12B (local)" },
+              { id = "mlx-community/Qwen3.5-9B-OptiQ-4bit", name = "Qwen3.5 9B (local)" }
             ]
           }
         } : {},
@@ -129,7 +130,7 @@ locals {
         }
         fetch = { enabled = false }
       }
-      deny = ["browser", "apply_patch"]
+      deny = ["browser", "apply_patch", "gateway"]
     }
     plugins = {
       entries = {
