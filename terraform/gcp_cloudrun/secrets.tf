@@ -34,6 +34,18 @@ resource "google_secret_manager_secret_version" "telegram_bot_token" {
   secret_data = var.telegram_bot_token
 }
 
+resource "google_secret_manager_secret" "futu_telegram_bot_token" {
+  secret_id = "${var.service_name}-futu-telegram-bot-token"
+  replication {
+    auto {}
+  }
+}
+
+resource "google_secret_manager_secret_version" "futu_telegram_bot_token" {
+  secret      = google_secret_manager_secret.futu_telegram_bot_token.id
+  secret_data = var.futu_telegram_bot_token
+}
+
 resource "google_secret_manager_secret" "gateway_token" {
   secret_id = "${var.service_name}-gateway-token"
   replication {
@@ -47,7 +59,6 @@ resource "google_secret_manager_secret_version" "gateway_token" {
 }
 
 resource "google_secret_manager_secret" "brave_api_key" {
-  count     = var.brave_api_key != "" ? 1 : 0
   secret_id = "${var.service_name}-brave-api-key"
   replication {
     auto {}
@@ -55,8 +66,7 @@ resource "google_secret_manager_secret" "brave_api_key" {
 }
 
 resource "google_secret_manager_secret_version" "brave_api_key" {
-  count       = var.brave_api_key != "" ? 1 : 0
-  secret      = google_secret_manager_secret.brave_api_key[0].id
+  secret      = google_secret_manager_secret.brave_api_key.id
   secret_data = var.brave_api_key
 }
 
@@ -84,18 +94,16 @@ resource "google_secret_manager_secret_version" "slack_bot_token" {
   secret_data = var.slack_bot_token
 }
 
-resource "google_secret_manager_secret" "telegram_allow_from" {
-  count     = var.telegram_owner_id != "" ? 1 : 0
-  secret_id = "${var.service_name}-telegram-allow-from"
+resource "google_secret_manager_secret" "futu_rsa_private_key" {
+  secret_id = "${var.service_name}-futu-rsa-private-key"
   replication {
     auto {}
   }
 }
 
-resource "google_secret_manager_secret_version" "telegram_allow_from" {
-  count       = var.telegram_owner_id != "" ? 1 : 0
-  secret      = google_secret_manager_secret.telegram_allow_from[0].id
-  secret_data = jsonencode({ version = 1, allowFrom = [var.telegram_owner_id] })
+resource "google_secret_manager_secret_version" "futu_rsa_private_key" {
+  secret      = google_secret_manager_secret.futu_rsa_private_key.id
+  secret_data = tls_private_key.futu_rsa.private_key_pem
 }
 
 resource "google_secret_manager_secret" "r2_access_key_id" {

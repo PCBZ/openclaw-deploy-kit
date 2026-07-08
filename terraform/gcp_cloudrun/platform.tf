@@ -1,17 +1,19 @@
 locals {
   effective_container_image = "${var.region}-docker.pkg.dev/${var.project_id}/${var.ghcr_remote_repository_id}/${var.ghcr_image_path}:${var.ghcr_image_tag}"
+  futu_skills_install       = file("${path.module}/futu-skills-install.sh")
 
   openclaw_json_content = templatefile("${path.module}/../shared/openclaw.json.tpl", {
-    openclaw_gateway_token = var.openclaw_gateway_token
-    openrouter_api_key     = var.openrouter_api_key
-    brave_api_key          = var.brave_api_key
-    telegram_bot_token     = var.telegram_bot_token
-    slack_app_token        = var.slack_app_token
-    slack_bot_token        = var.slack_bot_token
-    slack_enabled          = true   # Cloud Run always provisions Slack secrets
-    bonjour_enabled        = true   # Cloud Run: disable bonjour discovery
-    use_plugin_load_paths  = false  # Cloud Run: extensions bundled in container image
-    telegram_owner_id      = var.telegram_owner_id
+    openclaw_gateway_token  = var.openclaw_gateway_token
+    openrouter_api_key      = var.openrouter_api_key
+    brave_api_key           = var.brave_api_key
+    telegram_bot_token      = var.telegram_bot_token
+    futu_telegram_bot_token = var.futu_telegram_bot_token
+    slack_app_token         = var.slack_app_token
+    slack_bot_token         = var.slack_bot_token
+    slack_enabled           = true   # Cloud Run always provisions Slack secrets
+    bonjour_enabled         = true   # Cloud Run: disable bonjour discovery
+    use_plugin_load_paths   = false  # Cloud Run: extensions bundled in container image
+    telegram_owner_id       = var.telegram_owner_id
   })
 }
 
@@ -21,7 +23,8 @@ resource "google_project_service" "required" {
     "artifactregistry.googleapis.com",
     "secretmanager.googleapis.com",
     "iam.googleapis.com",
-    "serviceusage.googleapis.com"
+    "serviceusage.googleapis.com",
+    "compute.googleapis.com"
   ])
 
   project                    = var.project_id
@@ -48,6 +51,75 @@ resource "google_artifact_registry_repository" "ghcr_remote" {
   }
 
   depends_on = [google_project_service.required]
+}
+
+resource "tls_private_key" "futu_rsa" {
+  algorithm = "RSA"
+  rsa_bits  = 1024
+}
+
+resource "google_compute_instance" "futu_opend" {
+  name         = "${var.service_name}-futu-opend"
+  machine_type = "e2-micro"
+  zone         = "${var.region}-b"
+  project      = var.project_id
+  tags         = ["${var.service_name}-futu-opend"]
+
+  boot_disk {
+    initialize_params {
+      image = "ubuntu-os-cloud/ubuntu-2204-lts"
+      size  = 20
+      type  = "pd-balanced"
+    }
+  }
+
+  network_interface {
+    network = "default"
+    access_config {}
+  }
+
+  service_account {
+    email  = google_service_account.futu_opend.email
+    scopes = ["cloud-platform"]
+  }
+
+  metadata = {
+    block-project-ssh-keys = "true"
+    startup-script = templatefile("${path.module}/futu-opend-startup.sh", {
+      futu_account        = var.futu_account
+      futu_password_md5   = var.futu_password_md5
+      rsa_secret_name     = google_secret_manager_secret.futu_rsa_private_key.secret_id
+      project_id          = var.project_id
+    })
+  }
+
+  shielded_instance_config {
+    enable_secure_boot          = true
+    enable_vtpm                 = true
+    enable_integrity_monitoring = true
+  }
+
+  allow_stopping_for_update = true
+
+  depends_on = [
+    google_project_service.required,
+    google_secret_manager_secret_iam_member.futu_opend_rsa_key,
+    google_secret_manager_secret_version.futu_rsa_private_key,
+  ]
+}
+
+resource "google_compute_firewall" "futu_opend_api" {
+  name    = "${var.service_name}-futu-opend-api"
+  network = "default"
+  project = var.project_id
+
+  allow {
+    protocol = "tcp"
+    ports    = ["11111"]
+  }
+
+  source_ranges = ["10.0.0.0/8"]
+  target_tags   = ["${var.service_name}-futu-opend"]
 }
 
 resource "google_artifact_registry_repository_iam_member" "ghcr_remote_reader" {

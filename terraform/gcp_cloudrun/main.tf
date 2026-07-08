@@ -13,6 +13,14 @@ resource "google_cloud_run_v2_service" "openclaw" {
       max_instance_count = var.max_instances
     }
 
+    vpc_access {
+      network_interfaces {
+        network    = "default"
+        subnetwork = "default"
+      }
+      egress = "PRIVATE_RANGES_ONLY"
+    }
+
     containers {
       name  = "rclone-sync"
       image = "rclone/rclone:latest"
@@ -79,7 +87,7 @@ resource "google_cloud_run_v2_service" "openclaw" {
       depends_on = ["rclone-sync"]
       image = local.effective_container_image
       command = ["/bin/sh"]
-      args    = ["-lc", "mkdir -p /home/node/.openclaw/agents/main/agent /home/node/.openclaw/credentials; [ -n \"$OPENCLAW_JSON\" ] && echo \"$OPENCLAW_JSON\" > /home/node/.openclaw/openclaw.json; [ -n \"$TELEGRAM_ALLOW_FROM\" ] && echo \"$TELEGRAM_ALLOW_FROM\" > /home/node/.openclaw/credentials/telegram-allowFrom.json; printf '{\"openrouter\":{\"apiKey\":\"%s\"}}' \"$OPENROUTER_API_KEY\" > /home/node/.openclaw/agents/main/agent/auth-profiles.json; printf '{\"providers\":{\"openrouter\":{\"baseUrl\":\"https://openrouter.ai/api/v1\",\"api\":\"openai-completions\",\"apiKey\":\"OPENROUTER_API_KEY\"}}}' > /home/node/.openclaw/agents/main/agent/models.json; exec openclaw gateway run --bind lan --port \"$${PORT:-8080}\" --allow-unconfigured"]
+      args    = ["-lc", "mkdir -p /home/node/.openclaw/agents/main/agent /home/node/.openclaw/credentials; [ -n \"$OPENCLAW_JSON\" ] && printf '%s' \"$OPENCLAW_JSON\" > /home/node/.openclaw/openclaw.json; printf '{\"openrouter\":{\"apiKey\":\"%s\"}}' \"$OPENROUTER_API_KEY\" > /home/node/.openclaw/agents/main/agent/auth-profiles.json; printf '{\"providers\":{\"openrouter\":{\"baseUrl\":\"https://openrouter.ai/api/v1\",\"api\":\"openai-completions\",\"apiKey\":\"%s\"}}}' \"$OPENROUTER_API_KEY\" > /home/node/.openclaw/agents/main/agent/models.json; ${local.futu_skills_install}exec openclaw gateway run --bind lan --port \"$${PORT:-8080}\" --allow-unconfigured"]
 
       ports {
         container_port = 8080
@@ -154,6 +162,16 @@ resource "google_cloud_run_v2_service" "openclaw" {
       }
 
       env {
+        name = "FUTU_TELEGRAM_BOT_TOKEN"
+        value_source {
+          secret_key_ref {
+            secret  = google_secret_manager_secret.futu_telegram_bot_token.secret_id
+            version = "latest"
+          }
+        }
+      }
+
+      env {
         name = "OPENCLAW_GATEWAY_TOKEN"
         value_source {
           secret_key_ref {
@@ -163,28 +181,12 @@ resource "google_cloud_run_v2_service" "openclaw" {
         }
       }
 
-      dynamic "env" {
-        for_each = var.brave_api_key != "" ? [1] : []
-        content {
-          name = "BRAVE_API_KEY"
-          value_source {
-            secret_key_ref {
-              secret  = google_secret_manager_secret.brave_api_key[0].secret_id
-              version = "latest"
-            }
-          }
-        }
-      }
-
-      dynamic "env" {
-        for_each = var.telegram_owner_id != "" ? [1] : []
-        content {
-          name = "TELEGRAM_ALLOW_FROM"
-          value_source {
-            secret_key_ref {
-              secret  = google_secret_manager_secret.telegram_allow_from[0].secret_id
-              version = "latest"
-            }
+      env {
+        name = "BRAVE_API_KEY"
+        value_source {
+          secret_key_ref {
+            secret  = google_secret_manager_secret.brave_api_key.secret_id
+            version = "latest"
           }
         }
       }
@@ -208,6 +210,21 @@ resource "google_cloud_run_v2_service" "openclaw" {
           }
         }
       }
+
+      env {
+        name  = "FUTU_OPEND_HOST"
+        value = google_compute_instance.futu_opend.network_interface[0].network_ip
+      }
+
+      env {
+        name = "FUTU_RSA_PRIVATE_KEY"
+        value_source {
+          secret_key_ref {
+            secret  = google_secret_manager_secret.futu_rsa_private_key.secret_id
+            version = "latest"
+          }
+        }
+      }
     }
 
     volumes {
@@ -220,9 +237,10 @@ resource "google_cloud_run_v2_service" "openclaw" {
   depends_on = [
     google_artifact_registry_repository_iam_member.ghcr_remote_reader,
     google_secret_manager_secret_version.openclaw_json,
-    google_secret_manager_secret_version.telegram_allow_from,
     google_project_iam_member.secret_accessor,
     google_secret_manager_secret_version.r2_access_key_id,
     google_secret_manager_secret_version.r2_secret_access_key,
+    google_secret_manager_secret_version.futu_rsa_private_key,
+    google_secret_manager_secret_version.futu_telegram_bot_token,
   ]
 }

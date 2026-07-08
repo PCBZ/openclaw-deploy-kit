@@ -13,11 +13,15 @@ terraform {
       source  = "hashicorp/local"
       version = "~> 2.0"
     }
+    tls = {
+      source  = "hashicorp/tls"
+      version = "~> 4.0"
+    }
   }
 }
 
 provider "google" {
   project     = var.project_id
   region      = var.region
-  credentials = var.gcp_credentials_json != "" ? var.gcp_credentials_json : null
+  credentials = var.gcp_credentials_json
 }

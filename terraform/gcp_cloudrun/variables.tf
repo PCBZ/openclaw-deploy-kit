@@ -80,6 +80,12 @@ variable "telegram_owner_id" {
   default     = ""
 }
 
+variable "futu_telegram_bot_token" {
+  description = "Telegram bot token for the Futu-dedicated bot. Only responds to telegram_owner_id."
+  type        = string
+  sensitive   = true
+}
+
 variable "openclaw_gateway_token" {
   type      = string
   sensitive = true
@@ -102,6 +108,21 @@ variable "slack_bot_token" {
   description = "Slack Bot OAuth Token (xoxb-...)"
   type        = string
   sensitive   = true
+}
+
+# ── Futu OpenD (GCE VM) ───────────────────────────────────────
+variable "futu_account" {
+  description = "Futu/Moomoo login account (phone or email). Leave empty to disable Futu OpenD VM."
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "futu_password_md5" {
+  description = "MD5 hash of Futu login password (echo -n 'password' | md5)"
+  type        = string
+  sensitive   = true
+  default     = ""
 }
 
 # ── Cloudflare R2 ─────────────────────────────────────────────
