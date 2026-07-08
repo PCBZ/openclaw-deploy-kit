@@ -4,7 +4,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Last Commit](https://img.shields.io/github/last-commit/PCBZ/openclaw-deploy-kit)](https://github.com/PCBZ/openclaw-deploy-kit/commits/main)
 [![Terraform](https://img.shields.io/badge/Terraform-%3E%3D1.5-844fba?logo=terraform&logoColor=white)](https://www.terraform.io)
-[![DigitalOcean](https://img.shields.io/badge/DigitalOcean-Droplet-0080ff?logo=digitalocean&logoColor=white)](https://www.digitalocean.com)
+[![DigitalOcean](https://img.shields.io/badge/DigitalOcean-Droplet%20%2B%20App%20Platform-0080ff?logo=digitalocean&logoColor=white)](https://www.digitalocean.com)
 [![Azure](https://img.shields.io/badge/Azure-VM-0078d4?logo=microsoft-azure&logoColor=white)](https://azure.microsoft.com)
 [![GCP](https://img.shields.io/badge/GCP-Cloud%20Run%20%2B%20Compute%20Engine-4285F4?logo=googlecloud&logoColor=white)](https://cloud.google.com)
 [![Cloudflare R2](https://img.shields.io/badge/Cloudflare-R2%20Persistent%20Memory-f38020?logo=cloudflare&logoColor=white)](https://developers.cloudflare.com/r2/)
@@ -22,6 +22,7 @@ One-command deployment of an [OpenClaw](https://openclaw.bot) AI agent on Digita
 - Web search via Brave Search (falls back to DuckDuckGo)
 - 15+ switchable LLM models via `/model <alias>` (GPT-4o, Claude, Gemini, Llama, DeepSeek, and more)
 - **GCP Cloud Run**: persistent memory across container restarts via Cloudflare R2 (rclone sidecar syncs every 60s)
+- **DO App Platform**: 23 free models via DigitalOcean Serverless Inference + optional local mlx-vlm model
 - Secrets managed via `.env` + direnv — never committed
 
 ## Prerequisites
@@ -33,7 +34,7 @@ One-command deployment of an [OpenClaw](https://openclaw.bot) AI agent on Digita
 - Azure subscription + service principal credentials (for Azure path)
 - GCP project (for GCP VM or GCP Cloud Run path)
 - Cloudflare account + R2 credentials (for GCP Cloud Run path only)
-- OpenRouter API key
+- OpenRouter API key (for VM/Cloud Run targets)
 - Telegram bot token (from [@BotFather](https://t.me/BotFather))
 - Slack App-Level token (starts with `xapp-`) — optional
 - Slack Bot User OAuth token (starts with `xoxb-`) — optional
@@ -50,7 +51,8 @@ Edit `.env` and fill in your values:
 
 | Variable | Description |
 |---|---|
-| `OPENROUTER_API_KEY` | From [openrouter.ai/keys](https://openrouter.ai/keys) |
+| `DO_TOKEN` | DigitalOcean API token — also used as DO Inference key (App Platform) |
+| `OPENROUTER_API_KEY` | From [openrouter.ai/keys](https://openrouter.ai/keys) — for VM/Cloud Run targets |
 | `TELEGRAM_BOT_TOKEN` | From [@BotFather](https://t.me/BotFather) |
 | `OPENCLAW_GATEWAY_TOKEN` | Any strong random string |
 | `BRAVE_API_KEY` | From [api.search.brave.com](https://api.search.brave.com) — optional, falls back to DuckDuckGo |
@@ -61,13 +63,77 @@ Edit `.env` and fill in your values:
 | `CF_API_TOKEN` | Cloudflare API Token with R2:Edit permission — **Cloud Run only** |
 | `R2_ACCESS_KEY_ID` | R2 S3-compatible Access Key ID — **Cloud Run only** |
 | `R2_SECRET_ACCESS_KEY` | R2 S3-compatible Secret Access Key — **Cloud Run only** |
+| `MLX_BASE_URL` | mlx-vlm server base URL e.g. `https://xxx.ngrok-free.app/v1` — **App Platform only**, optional |
+| `MLX_API_KEY` | mlx-vlm server API key — **App Platform only**, optional |
 
 ### 2. Choose deployment target
 
+---
 
 ### <span style="font-size:1.35em;font-weight:bold;">DigitalOcean</span>
 
-[![DigitalOcean](https://img.shields.io/badge/DigitalOcean-Droplet-0080ff?logo=digitalocean&logoColor=white)](https://www.digitalocean.com)
+[![DigitalOcean](https://img.shields.io/badge/DigitalOcean-0080ff?logo=digitalocean&logoColor=white)](https://www.digitalocean.com)
+
+#### <span style="font-size:1.15em;font-weight:bold;">App Platform</span> *(recommended — no SSH, no VM management)*
+
+Uses DigitalOcean Serverless Inference for LLMs — no OpenRouter key needed. DO token doubles as the inference API key.
+
+```bash
+cd terraform/do_app_platform
+direnv allow
+terraform init
+terraform apply
+```
+
+`terraform.tfvars.example`:
+
+```hcl
+region        = "tor"   # tor, sfo, nyc, sgp, ams, fra
+instance_size = "apps-s-1vcpu-1gb"  # $10/mo
+```
+
+**Available models (23 free via DO Inference):**
+
+| Alias | Model |
+|---|---|
+| `flash` | DeepSeek 4 Flash *(default)* |
+| `deepseek` | DeepSeek V4 Pro |
+| `deepseek-3.2` | DeepSeek 3.2 |
+| `r1` | DeepSeek R1 Distill Llama 70B |
+| `maverick` | Llama 4 Maverick |
+| `llama` | Llama 3.3 70B |
+| `oss` | GPT OSS 120B (DO-hosted) |
+| `oss-mini` | GPT OSS 20B (DO-hosted) |
+| `qwen3` | Qwen3 32B |
+| `qwen3.5` | Qwen3.5 397B |
+| `qwen-coder` | Qwen3 Coder Flash |
+| `nemotron-ultra` | Nemotron Ultra 550B |
+| `nemotron` | Nemotron Super 120B |
+| `nemotron-nano` | Nemotron Nano Omni |
+| `gemma` | Gemma 4 31B |
+| `kimi` | Kimi K2.6 |
+| `kimi-k2.5` | Kimi K2.5 |
+| `minimax` | MiniMax M2.5 |
+| `mistral` | Mistral 3 14B |
+| `glm` | GLM-5 |
+| `arcee` | Arcee Trinity Thinking |
+| `mimo` | Mimo v2.5 Pro |
+| `mimo-mini` | Mimo v2.5 |
+
+**Optional local mlx-vlm model** — run on your Mac and expose via ngrok:
+
+```bash
+mlx_vlm.server --model mlx-community/gemma-4-12B-it-4bit --port 8080
+ngrok http 8080
+```
+
+Set in `.env`:
+```
+MLX_BASE_URL=https://xxxx.ngrok-free.app/v1
+MLX_API_KEY=your-key
+```
+
+Then `terraform apply`. Use `/model local` in Telegram to switch to the local model.
 
 #### <span style="font-size:1.15em;font-weight:bold;">Droplet</span>
 
@@ -85,6 +151,7 @@ droplet_size        = "s-1vcpu-1gb"  # $6/mo — increase if OOM
 swap_size           = "3G"
 ```
 
+---
 
 ### <span style="font-size:1.35em;font-weight:bold;">Azure</span>
 
@@ -115,11 +182,11 @@ swap_size           = 2
 openclaw_memory_limit_mb = 800
 ```
 
+---
 
 ### <span style="font-size:1.35em;font-weight:bold;">GCP</span>
 
 [![GCP Compute Engine](https://img.shields.io/badge/GCP-ComputeEngine-4285F4?logo=googlecloud&logoColor=white)](https://cloud.google.com/compute)
-
 
 #### <span style="font-size:1.15em;font-weight:bold;">Compute Engine</span>
 
@@ -156,7 +223,6 @@ GCP VM deployment in this repo uses:
 - Swap file + systemd memory cap for OpenClaw process
 - Firewall rules for SSH (`22`) and OpenClaw gateway (`18789`)
 - Shielded VM (Secure Boot + vTPM + Integrity Monitoring)
-
 
 #### <span style="font-size:1.15em;font-weight:bold;">Cloud Run</span>
 
@@ -200,6 +266,8 @@ GCP Cloud Run deployment in this repo uses:
 - **Cloudflare R2** for persistent state (session history, memory, soul files) — synced every 60s via rclone sidecar
 - Multi-container setup: `openclaw` + `rclone-sync` sidecar sharing an emptyDir volume
 
+---
+
 ### 3. Load secrets via direnv
 
 ```bash
@@ -219,7 +287,7 @@ Wait ~5 minutes for bootstrap to complete. The bot will start automatically.
 
 ### 5. Verify
 
-For VM targets (DigitalOcean / Azure VM / GCP VM):
+For VM targets (DigitalOcean Droplet / Azure VM / GCP VM):
 
 ```bash
 terraform output ssh_command
@@ -231,15 +299,19 @@ For GCP Cloud Run target:
 terraform output cloud_run_url
 ```
 
-Then:
-- VM targets: SSH to the VM using the output command.
-- Cloud Run target: open the Cloud Run URL from output to confirm the service is reachable.
-- Send a Telegram message to confirm bot response.
-- (Optional) send a Slack message if Slack tokens are configured.
+For DO App Platform:
+
+```bash
+doctl apps logs <app-id> --type=run
+```
+
+Then send a Telegram message to confirm bot response.
 
 ## Switching Models
 
-In Telegram or Slack, use `/model <alias>`. Available aliases:
+In Telegram or Slack, use `/model <alias>`. Available aliases depend on deployment target — see the model table for your target above.
+
+**VM / Cloud Run targets (OpenRouter):**
 
 | Alias | Model |
 |---|---|
