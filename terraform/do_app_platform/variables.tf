@@ -30,7 +30,7 @@ variable "openclaw_gateway_token" {
 }
 
 variable "brave_api_key" {
-  description = "Brave Search API key. Leave empty to disable web search."
+  description = "Brave Search API key. Leave empty to fall back to DuckDuckGo (web search remains enabled)."
   type        = string
   sensitive   = true
   default     = ""

@@ -5,7 +5,10 @@
 #   DO_TOKEN, TELEGRAM_BOT_TOKEN, OPENCLAW_GATEWAY_TOKEN
 #   (DO_TOKEN is reused as the DO Inference API key — no separate key needed)
 # Optional keys in .env:
-#   BRAVE_API_KEY, TELEGRAM_OWNER_ID
+#   BRAVE_API_KEY       — falls back to DuckDuckGo if unset
+#   TELEGRAM_OWNER_ID   — restricts DMs to your user ID only
+#   MLX_BASE_URL        — local mlx-vlm server URL (e.g. https://xxx.ngrok-free.app/v1)
+#   MLX_API_KEY         — mlx-vlm server API key
 
 # ── App Platform ─────────────────────────────────────────────
 # Regions: tor (Toronto), sfo (San Francisco), nyc (New York), sgp (Singapore), ams (Amsterdam), fra (Frankfurt)
