@@ -1,0 +1,43 @@
+# ── Azure Authentication ───────────────────────────────────
+# Get these values from Azure Portal or by running:
+# az ad sp create-for-rbac --name "openclaw-terraform" --role Contributor
+
+subscription_id = "YOUR_SUBSCRIPTION_ID"
+client_id       = "YOUR_CLIENT_ID"
+client_secret   = "YOUR_CLIENT_SECRET"
+tenant_id       = "YOUR_TENANT_ID"
+
+# ── Azure Region & Zone ────────────────────────────────────
+resource_group_name = "openclaw-rg"
+location             = "canadacentral"  # Options: eastus, westus, canadacentral, etc.
+
+# ── Storage Account (must be globally unique) ────────────
+# If this name is taken, modify it to something like: openclaw201<yourname>
+storage_account_name = "openclaw001storage"
+storage_share_name   = "openclaw-data"
+
+# ── Function App Configuration ──────────────────────────
+# If names are taken, modify them by adding random suffix
+function_storage_account_name = "openclawfnstg001"  # Must be globally unique
+app_service_plan_name         = "openclaw-asp-001"
+function_app_name             = "openclaw-func-001"  # Must be globally unique
+
+# ── Auto-Stop Configuration ────────────────────────────────
+idle_timeout_minutes = 30  # Stop ACI after 30 minutes of inactivity
+                           # Change this to adjust auto-stop timing
+
+# ── ECI Container Configuration ──────────────────────────────
+container_group_name = "openclaw-container"
+dns_name_label       = "openclaw-aci-unique-name"  # Must be globally unique!
+cpu_cores            = 2                           # Official recommendation
+memory_gb            = 4                           # Official recommendation
+
+# ── Container Image ────────────────────────────────────────────
+# Using official OpenClaw image from GitHub Container Registry
+# Available tags: latest, main, specific versions
+container_image = "ghcr.io/openclaw/openclaw:latest"
+
+# ── OpenClaw API Keys ────────────────────────────────────────
+# These are automatically loaded from .env file (see .envrc)
+# No need to set them here - they are injected into the container via environment variables
+# The .envrc file handles: export TF_VAR_openrouter_api_key=$OPENROUTER_API_KEY, etc.
