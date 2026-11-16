@@ -53,9 +53,9 @@ variable "gcp_credentials_json" {
 }
 
 variable "min_instances" {
-  description = "Cloud Run minimum instances"
+  description = "Cloud Run minimum instances (0 = scale to zero)"
   type        = number
-  default     = 1
+  default     = 0
 }
 
 variable "max_instances" {
@@ -64,7 +64,8 @@ variable "max_instances" {
   default     = 3
 }
 
-variable "openrouter_api_key" {
+variable "gemini_api_key" {
+  description = "Google AI Studio (Gemini) API key — free tier"
   type      = string
   sensitive = true
 }

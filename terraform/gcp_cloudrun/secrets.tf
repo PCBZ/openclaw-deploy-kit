@@ -1,13 +1,13 @@
-resource "google_secret_manager_secret" "openrouter_api_key" {
-  secret_id = "${var.service_name}-openrouter-api-key"
+resource "google_secret_manager_secret" "gemini_api_key" {
+  secret_id = "${var.service_name}-gemini-api-key"
   replication {
     auto {}
   }
 }
 
-resource "google_secret_manager_secret_version" "openrouter_api_key" {
-  secret      = google_secret_manager_secret.openrouter_api_key.id
-  secret_data = var.openrouter_api_key
+resource "google_secret_manager_secret_version" "gemini_api_key" {
+  secret      = google_secret_manager_secret.gemini_api_key.id
+  secret_data = var.gemini_api_key
 }
 
 resource "google_secret_manager_secret" "telegram_bot_token" {

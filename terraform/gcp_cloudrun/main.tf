@@ -124,10 +124,10 @@ resource "google_cloud_run_v2_service" "openclaw" {
       }
 
       env {
-        name = "OPENROUTER_API_KEY"
+        name = "GEMINI_API_KEY"
         value_source {
           secret_key_ref {
-            secret  = google_secret_manager_secret.openrouter_api_key.secret_id
+            secret  = google_secret_manager_secret.gemini_api_key.secret_id
             version = "latest"
           }
         }
