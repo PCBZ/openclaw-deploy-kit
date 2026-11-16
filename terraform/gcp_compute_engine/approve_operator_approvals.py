@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Grant operator.approvals on paired devices; clear processed pending requests."""
 import json
 import time
@@ -13,15 +12,15 @@ for _ in range(12):
             pending = json.load(f)
         if pending:
             break
-    except Exception:
-        pass
+    except (OSError, json.JSONDecodeError):
+        pending = {}
     time.sleep(5)
 
 # Even if no pending requests, approve operator.approvals for all paired devices.
 try:
     with open(PAIRED_FILE) as f:
         paired = json.load(f)
-except Exception:
+except (OSError, json.JSONDecodeError):
     paired = {}
 
 for request in pending.values():

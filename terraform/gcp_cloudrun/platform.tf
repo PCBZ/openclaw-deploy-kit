@@ -3,7 +3,6 @@ locals {
 
   openclaw_json_content = templatefile("${path.module}/../shared/openclaw.json.tpl", {
     openclaw_gateway_token = var.openclaw_gateway_token
-    openrouter_api_key     = var.openrouter_api_key
     brave_api_key          = var.brave_api_key
     telegram_bot_token     = var.telegram_bot_token
     slack_app_token        = var.slack_app_token

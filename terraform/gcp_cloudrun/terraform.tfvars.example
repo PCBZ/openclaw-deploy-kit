@@ -10,7 +10,7 @@ region     = "us-west1"
 
 # ── Cloud Run ────────────────────────────────────────────────
 service_name  = "openclaw"
-min_instances = 1
+min_instances = 0
 max_instances = 3
 
 ghcr_remote_repository_id = "ghcr-remote"
