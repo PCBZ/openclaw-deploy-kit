@@ -8,40 +8,14 @@
   "agents": {
     "defaults": {
       "model": {
-        "primary": "openrouter/auto"
+        "primary": "google/gemini-3.5-flash-lite"
       },
       "models": {
-        "openrouter/anthropic/claude-opus-4.7":                                        {"alias": "opus"},
-        "openrouter/anthropic/claude-opus-4.6":                                        {"alias": "opus-4.6"},
-        "openrouter/anthropic/claude-sonnet-4.6":                                      {"alias": "sonnet"},
-        "openrouter/anthropic/claude-haiku-4.5":                                       {"alias": "haiku"},
-        "openrouter/openai/gpt-5.5":                                                   {"alias": "gpt5.5"},
-        "openrouter/openai/gpt-5.4":                                                   {"alias": "gpt5"},
-        "openrouter/openai/gpt-5.4-mini":                                              {"alias": "mini5"},
-        "openrouter/openai/gpt-4o":                                                    {"alias": "gpt4o"},
-        "openrouter/openai/gpt-4o-mini":                                               {"alias": "mini"},
-        "openrouter/google/gemini-2.5-pro":                                            {"alias": "gemini-pro"},
-        "openrouter/google/gemini-2.5-flash":                                          {"alias": "flash"},
-        "openrouter/google/gemma-4-31b-it:free":                                       {"alias": "gemma"},
-        "openrouter/google/gemma-4-26b-a4b-it:free":                                   {"alias": "gemma-moe"},
-        "openrouter/x-ai/grok-4.3":                                                    {"alias": "grok"},
-        "openrouter/deepseek/deepseek-v4-pro":                                         {"alias": "deepseek"},
-        "openrouter/deepseek/deepseek-v4-flash":                                       {"alias": "deepseek-flash"},
-        "openrouter/deepseek/deepseek-r1":                                             {"alias": "r1"},
-        "openrouter/qwen/qwen3.6-flash":                                               {"alias": "qwen-flash"},
-        "openrouter/mistralai/devstral-small":                                         {"alias": "devstral"},
-        "openrouter/meta-llama/llama-3.3-70b-instruct:free":                           {"alias": "llama"},
-        "openrouter/nvidia/nemotron-3-ultra-550b-a55b:free":                           {"alias": "nemotron-ultra"},
-        "openrouter/nvidia/nemotron-3-super-120b-a12b:free":                           {"alias": "nemotron"},
-        "openrouter/nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free":               {"alias": "nemotron-nano"},
-        "openrouter/openai/gpt-oss-120b:free":                                         {"alias": "gpt-oss"},
-        "openrouter/openai/gpt-oss-20b:free":                                          {"alias": "gpt-oss-mini"},
-        "openrouter/qwen/qwen3-coder:free":                                            {"alias": "coder"},
-        "openrouter/qwen/qwen3-next-80b-a3b-instruct:free":                            {"alias": "qwen3"},
-        "openrouter/poolside/laguna-m.1:free":                                         {"alias": "laguna"},
-        "openrouter/nex-agi/nex-n2-pro:free":                                          {"alias": "nex"},
-        "openrouter/cognitivecomputations/dolphin-mistral-24b-venice-edition:free":    {"alias": "uncensored"},
-        "openrouter/auto":                                                             {"alias": "auto"}
+        "google/gemini-3.5-flash":      {"alias": "flash"},
+        "google/gemini-3.5-flash-lite": {"alias": "flash-lite"},
+        "google/gemini-3.1-flash-lite": {"alias": "flash-3.1-lite"},
+        "google/gemini-3.8-flash":      {"alias": "flash-3.8"},
+        "google/gemini-3.6-flash":      {"alias": "flash-3.6"}
       },
       "compaction": { "mode": "safeguard", "reserveTokensFloor": 4000 }
     }
@@ -70,7 +44,7 @@
 %{ if slack_enabled ~}
       "slack": { "enabled": true },
 %{ endif ~}
-      "openrouter": { "enabled": true },
+      "google": { "enabled": true },
       "brave": {
         "enabled": true,
         "config": { "webSearch": { "apiKey": "${brave_api_key}" } }

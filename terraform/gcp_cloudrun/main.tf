@@ -79,7 +79,7 @@ resource "google_cloud_run_v2_service" "openclaw" {
       depends_on = ["rclone-sync"]
       image = local.effective_container_image
       command = ["/bin/sh"]
-      args    = ["-lc", "mkdir -p /home/node/.openclaw/agents/main/agent /home/node/.openclaw/credentials; [ -n \"$OPENCLAW_JSON\" ] && echo \"$OPENCLAW_JSON\" > /home/node/.openclaw/openclaw.json; [ -n \"$TELEGRAM_ALLOW_FROM\" ] && echo \"$TELEGRAM_ALLOW_FROM\" > /home/node/.openclaw/credentials/telegram-allowFrom.json; printf '{\"openrouter\":{\"apiKey\":\"%s\"}}' \"$OPENROUTER_API_KEY\" > /home/node/.openclaw/agents/main/agent/auth-profiles.json; printf '{\"providers\":{\"openrouter\":{\"baseUrl\":\"https://openrouter.ai/api/v1\",\"api\":\"openai-completions\",\"apiKey\":\"OPENROUTER_API_KEY\"}}}' > /home/node/.openclaw/agents/main/agent/models.json; exec openclaw gateway run --bind lan --port \"$${PORT:-8080}\" --allow-unconfigured"]
+      args    = ["-lc", "mkdir -p /home/node/.openclaw/agents/main/agent /home/node/.openclaw/credentials; [ -n \"$OPENCLAW_JSON\" ] && echo \"$OPENCLAW_JSON\" > /home/node/.openclaw/openclaw.json; [ -n \"$TELEGRAM_ALLOW_FROM\" ] && echo \"$TELEGRAM_ALLOW_FROM\" > /home/node/.openclaw/credentials/telegram-allowFrom.json; printf '{\"google\":{\"apiKey\":\"%s\"}}' \"$GEMINI_API_KEY\" > /home/node/.openclaw/agents/main/agent/auth-profiles.json; exec openclaw gateway run --bind lan --port \"$${PORT:-8080}\" --allow-unconfigured"]
 
       ports {
         container_port = 8080
@@ -134,10 +134,10 @@ resource "google_cloud_run_v2_service" "openclaw" {
       }
 
       env {
-        name = "OPENROUTER_API_KEY"
+        name = "GEMINI_API_KEY"
         value_source {
           secret_key_ref {
-            secret  = google_secret_manager_secret.openrouter_api_key.secret_id
+            secret  = google_secret_manager_secret.gemini_api_key.secret_id
             version = "latest"
           }
         }
