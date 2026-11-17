@@ -66,8 +66,8 @@ variable "max_instances" {
 
 variable "gemini_api_key" {
   description = "Google AI Studio (Gemini) API key — free tier"
-  type      = string
-  sensitive = true
+  type        = string
+  sensitive   = true
 }
 
 variable "telegram_bot_token" {
@@ -127,4 +127,10 @@ variable "r2_bucket_name" {
   description = "R2 bucket name for OpenClaw state persistence"
   type        = string
   default     = "openclaw-state"
+}
+
+variable "telegram_webhook_enabled" {
+  description = "Use Telegram webhook mode (wakes a scaled-to-zero instance) instead of long polling. Makes the Cloud Run service publicly invokable (allUsers); the webhook route is protected by a secret header."
+  type        = bool
+  default     = true
 }

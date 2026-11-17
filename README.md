@@ -240,7 +240,7 @@ project_id = "your-gcp-project-id"
 region     = "us-west1"
 
 service_name  = "openclaw"
-min_instances = 1
+min_instances = 0   # 0 = scale to zero (see note below)
 max_instances = 3
 
 ghcr_remote_repository_id = "ghcr-remote"
@@ -258,6 +258,22 @@ r2_bucket_name        = "openclaw-state"
 > **Cloudflare R2 credentials** — two separate tokens are needed:
 > - `cloudflare_api_token`: [dash.cloudflare.com/profile/api-tokens](https://dash.cloudflare.com/profile/api-tokens) → Create Token → **R2:Edit** (used by Terraform to create the bucket)
 > - `r2_access_key_id` + `r2_secret_access_key`: Cloudflare Dashboard → R2 → **Manage R2 API Tokens** → Create Account API Token (used by rclone at runtime)
+
+> **New GCP project?** Terraform needs a service account that already has permission to create everything below, so these roles can't be granted by Terraform itself. Create the project, link billing, then:
+>
+> ```bash
+> gcloud iam service-accounts create terraform --project=YOUR_PROJECT_ID
+> for r in editor secretmanager.admin run.admin artifactregistry.admin iam.serviceAccountUser resourcemanager.projectIamAdmin serviceusage.serviceUsageAdmin; do
+>   gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
+>     --member="serviceAccount:terraform@YOUR_PROJECT_ID.iam.gserviceaccount.com" --role="roles/$r" --condition=None -q >/dev/null
+> done
+> gcloud iam service-accounts keys create ~/.gcp/YOUR_PROJECT_ID.json \
+>   --iam-account=terraform@YOUR_PROJECT_ID.iam.gserviceaccount.com
+> ```
+>
+> Then set `GCP_CREDENTIALS_FILE` in `.env` to that key path and run `direnv reload` before `terraform apply`. If the first apply reports an API as disabled, wait a minute and re-run it.
+
+> **Scale to zero:** with `min_instances = 0`, Telegram long-polling and Slack socket mode do not wake an idle instance, so the bots may stop replying after ~15 minutes without HTTP traffic. Use `min_instances = 1` for an always-on bot.
 
 GCP Cloud Run deployment in this repo uses:
 - Cloud Run service (managed runtime, no VM SSH needed)
