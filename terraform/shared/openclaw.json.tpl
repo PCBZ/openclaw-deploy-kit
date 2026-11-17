@@ -17,7 +17,7 @@
         "google/gemini-3.8-flash":      {"alias": "flash-3.8"},
         "google/gemini-3.6-flash":      {"alias": "flash-3.6"}
       },
-      "compaction": { "mode": "safeguard", "reserveTokensFloor": 4000 }
+      "compaction": { "mode": "safeguard" }
     }
   },
   "tools": {
