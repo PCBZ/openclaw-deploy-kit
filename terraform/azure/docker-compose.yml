@@ -1,0 +1,66 @@
+version: "3.8"
+
+services:
+  openclaw-gateway:
+    image: ghcr.io/openclaw/openclaw:latest
+    container_name: openclaw-gateway
+    restart: unless-stopped
+    ports:
+      - "18789:18789"
+    environment:
+      # Gateway configuration
+      NODE_ENV: production
+      OPENCLAW_GATEWAY_BIND: lan
+      OPENCLAW_ONBOARD_NON_INTERACTIVE: "1"
+      
+      # API Keys (load from .env file)
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+      OPENCLAW_GATEWAY_TOKEN: ${OPENCLAW_GATEWAY_TOKEN}
+      BRAVE_API_KEY: ${BRAVE_API_KEY}
+      TELEGRAM_OWNER_ID: ${TELEGRAM_OWNER_ID}
+      SLACK_APP_TOKEN: ${SLACK_APP_TOKEN}
+      SLACK_BOT_TOKEN: ${SLACK_BOT_TOKEN}
+    
+    volumes:
+      # Persist configuration and workspace
+      - openclaw-config:/home/node/.openclaw
+      - openclaw-workspace:/home/node/.openclaw/workspace
+    
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:18789/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    
+    networks:
+      - openclaw-network
+
+  openclaw-cli:
+    image: ghcr.io/openclaw/openclaw:latest
+    container_name: openclaw-cli
+    entrypoint: node
+    command: dist/index.js
+    depends_on:
+      openclaw-gateway:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      OPENCLAW_GATEWAY_TOKEN: ${OPENCLAW_GATEWAY_TOKEN}
+    volumes:
+      - openclaw-config:/home/node/.openclaw
+    networks:
+      - openclaw-network
+    profiles:
+      - cli
+
+volumes:
+  openclaw-config:
+    driver: local
+  openclaw-workspace:
+    driver: local
+
+networks:
+  openclaw-network:
+    driver: bridge
