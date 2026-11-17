@@ -3,6 +3,8 @@ resource "google_secret_manager_secret" "openclaw_json" {
   replication {
     auto {}
   }
+
+  depends_on = [google_project_service.required]
 }
 
 resource "google_secret_manager_secret_version" "openclaw_json" {
@@ -15,6 +17,8 @@ resource "google_secret_manager_secret" "gemini_api_key" {
   replication {
     auto {}
   }
+
+  depends_on = [google_project_service.required]
 }
 
 resource "google_secret_manager_secret_version" "gemini_api_key" {
@@ -27,6 +31,8 @@ resource "google_secret_manager_secret" "telegram_bot_token" {
   replication {
     auto {}
   }
+
+  depends_on = [google_project_service.required]
 }
 
 resource "google_secret_manager_secret_version" "telegram_bot_token" {
@@ -39,6 +45,8 @@ resource "google_secret_manager_secret" "gateway_token" {
   replication {
     auto {}
   }
+
+  depends_on = [google_project_service.required]
 }
 
 resource "google_secret_manager_secret_version" "gateway_token" {
@@ -52,6 +60,8 @@ resource "google_secret_manager_secret" "brave_api_key" {
   replication {
     auto {}
   }
+
+  depends_on = [google_project_service.required]
 }
 
 resource "google_secret_manager_secret_version" "brave_api_key" {
@@ -65,6 +75,8 @@ resource "google_secret_manager_secret" "slack_app_token" {
   replication {
     auto {}
   }
+
+  depends_on = [google_project_service.required]
 }
 
 resource "google_secret_manager_secret_version" "slack_app_token" {
@@ -77,6 +89,8 @@ resource "google_secret_manager_secret" "slack_bot_token" {
   replication {
     auto {}
   }
+
+  depends_on = [google_project_service.required]
 }
 
 resource "google_secret_manager_secret_version" "slack_bot_token" {
@@ -90,6 +104,8 @@ resource "google_secret_manager_secret" "telegram_allow_from" {
   replication {
     auto {}
   }
+
+  depends_on = [google_project_service.required]
 }
 
 resource "google_secret_manager_secret_version" "telegram_allow_from" {
@@ -103,6 +119,8 @@ resource "google_secret_manager_secret" "r2_access_key_id" {
   replication {
     auto {}
   }
+
+  depends_on = [google_project_service.required]
 }
 
 resource "google_secret_manager_secret_version" "r2_access_key_id" {
@@ -115,6 +133,8 @@ resource "google_secret_manager_secret" "r2_secret_access_key" {
   replication {
     auto {}
   }
+
+  depends_on = [google_project_service.required]
 }
 
 resource "google_secret_manager_secret_version" "r2_secret_access_key" {

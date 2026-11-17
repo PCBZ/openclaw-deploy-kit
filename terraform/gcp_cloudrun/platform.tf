@@ -20,7 +20,8 @@ resource "google_project_service" "required" {
     "artifactregistry.googleapis.com",
     "secretmanager.googleapis.com",
     "iam.googleapis.com",
-    "serviceusage.googleapis.com"
+    "serviceusage.googleapis.com",
+    "cloudresourcemanager.googleapis.com"
   ])
 
   project                    = var.project_id
@@ -55,4 +56,6 @@ resource "google_artifact_registry_repository_iam_member" "ghcr_remote_reader" {
   repository = google_artifact_registry_repository.ghcr_remote.repository_id
   role       = "roles/artifactregistry.reader"
   member     = "serviceAccount:${google_service_account.cloudrun.email}"
+
+  depends_on = [google_project_service.required]
 }

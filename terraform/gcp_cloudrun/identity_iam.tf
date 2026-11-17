@@ -9,4 +9,6 @@ resource "google_project_iam_member" "secret_accessor" {
   project = var.project_id
   role    = "roles/secretmanager.secretAccessor"
   member  = "serviceAccount:${google_service_account.cloudrun.email}"
+
+  depends_on = [google_project_service.required]
 }
