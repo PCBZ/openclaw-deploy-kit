@@ -8,9 +8,10 @@
   "agents": {
     "defaults": {
       "model": {
-        "primary": "google/gemini-3.5-flash-lite"
+        "primary": "google/gemini-4-hydrogen"
       },
       "models": {
+        "google/gemini-4-hydrogen":     {"alias": "hydrogen"},
         "google/gemini-3.5-flash":      {"alias": "flash"},
         "google/gemini-3.5-flash-lite": {"alias": "flash-lite"},
         "google/gemini-3.1-flash-lite": {"alias": "flash-3.1-lite"},
