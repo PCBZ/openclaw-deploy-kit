@@ -8,7 +8,7 @@
   "agents": {
     "defaults": {
       "model": {
-        "primary": "google/gemini-4-hydrogen"
+        "primary": "google/gemini-3.5-flash-lite"
       },
       "models": {
         "google/gemini-4-hydrogen":     {"alias": "hydrogen"},
